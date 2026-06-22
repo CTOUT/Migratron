@@ -79,7 +79,9 @@ else {
 # 4. Check Stored Snapshots
 Log "Backup Output Directory: $outputDirResolved" 'INFO'
 if (Test-Path $outputDirResolved) {
-    $backups = Get-ChildItem -Path $outputDirResolved -Filter "migratron-store-*.zip" -File | Sort-Object LastWriteTime -Descending
+    $backups = Get-ChildItem -Path $outputDirResolved -Filter "migratron-store-*" | 
+               Where-Object { $_.Name -match '^migratron-store-\d{8}-\d{6}(\.zip)?$' } | 
+               Sort-Object LastWriteTime -Descending
     if ($backups.Count -gt 0) {
         Log "Found $($backups.Count) existing snapshot(s):" 'SUCCESS'
         foreach ($b in $backups) {
