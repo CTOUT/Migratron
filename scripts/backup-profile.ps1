@@ -236,6 +236,15 @@ try {
         if ($customXmlCreated -and (Test-Path $customXmlPath)) {
             Copy-Item -Path $customXmlPath -Destination $xmlStagingDir -Force | Out-Null
         }
+
+        # Backup the Migratron JSON configs
+        if (Test-Path $ConfigPath) {
+            Copy-Item -Path $ConfigPath -Destination $StagingStore -Force | Out-Null
+        }
+        $localConfigPath = Join-Path (Split-Path $ConfigPath) "usmt-config.local.json"
+        if (Test-Path $localConfigPath) {
+            Copy-Item -Path $localConfigPath -Destination $StagingStore -Force | Out-Null
+        }
         
         $zipFileName = "migratron-store-$timestamp.zip"
         $zipFilePath = Join-Path $outputDirResolved $zipFileName
