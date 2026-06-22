@@ -39,7 +39,7 @@ if ($Register) {
     
     # 1. Define the action to run PowerShell script
     $scriptPath = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot "..\migratron.ps1"))
-    $arguments  = "-NoProfile -ExecutionPolicy RemoteSigned -File `"$scriptPath`" -Backup -SkipSensitive"
+    $arguments  = "-NoProfile -ExecutionPolicy RemoteSigned -File `"$scriptPath`" -Backup"
 
     # Register the task using the same PowerShell host that is currently running
     # (pwsh.exe for PS 7+, powershell.exe for Windows PowerShell 5.1)
