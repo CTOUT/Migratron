@@ -19,8 +19,13 @@ if ($null -ne $usmtPath) {
     Log "USMT Path  : $usmtPath" 'INFO'
 
     # Show the effective user scope
-    $userScope = if (-not [string]::IsNullOrEmpty($config.usmt.userScope)) { $config.usmt.userScope } else { 'current' }
-    if ($userScope -eq 'all') {
+    $userScope  = if (-not [string]::IsNullOrEmpty($config.usmt.userScope)) { $config.usmt.userScope } else { 'current' }
+    $namedUsers = @($config.usmt.users | Where-Object { -not [string]::IsNullOrEmpty($_) })
+
+    if ($namedUsers.Count -gt 0) {
+        Log "User Scope : Named users — $($namedUsers -join ', ') (usmt.users[])" 'INFO'
+    }
+    elseif ($userScope -eq 'all') {
         Log "User Scope : All users on this machine (usmt.userScope = 'all')" 'WARN'
     }
     else {

@@ -3,6 +3,7 @@
   "usmt": {
     "customPath": "",
     "userScope": "current",
+    "users": [],
     "xmlFiles": [
       "MigApp.xml",
       "MigUser.xml",
@@ -10,7 +11,7 @@
     ],
     "additionalArgs": [
       "/c",
-      "/v:13",
+      "/v:5",
       "/efs:skip"
     ]
   },

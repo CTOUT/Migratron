@@ -120,14 +120,30 @@ $argList = @(
     "/l:`"$logFile`""
 )
 
-# User scope: controls which profiles ScanState captures.
-# "current" (default) — only the user running this script.
-# "all"               — every profile on the machine.
-$userScope = if (-not [string]::IsNullOrEmpty($config.usmt.userScope)) { $config.usmt.userScope } else { 'current' }
+# ── User scope resolution ────────────────────────────────────────────────────
+# Priority: users[] (named list) > userScope > default "current"
+#
+# users[]      non-empty → capture exactly those accounts (/ue:*\* + /ui: per entry)
+# userScope    "all"     → no user-filtering flags (USMT default: all profiles)
+# userScope    "current" → running user only (/ue:*\* + /ui:DOMAIN\USERNAME)
+$userScope   = if (-not [string]::IsNullOrEmpty($config.usmt.userScope)) { $config.usmt.userScope } else { 'current' }
+$namedUsers  = @($config.usmt.users | Where-Object { -not [string]::IsNullOrEmpty($_) })
 
-if ($userScope -eq 'all') {
+if ($namedUsers.Count -gt 0) {
+    # Named users mode — exclude all, then re-include each specified account
+    $argList += '/ue:*\*'
+    $userList = @()
+    foreach ($u in $namedUsers) {
+        # Auto-prefix with current domain if no domain separator present
+        $qualified = if ($u -match '\\') { $u } else { "$env:USERDOMAIN\$u" }
+        $argList  += "/ui:$qualified"
+        $userList += $qualified
+    }
+    Log "User Scope  : Named users — $($userList -join ', ')" 'INFO'
+}
+elseif ($userScope -eq 'all') {
     Log "User Scope  : All users on this machine" 'WARN'
-    Log "             (Set usmt.userScope to 'current' in usmt-config.local.json to limit to the running user.)" 'WARN'
+    Log "             (Set usmt.userScope to 'current' or populate usmt.users[] to narrow the scope.)" 'WARN'
 }
 else {
     # current: exclude everyone, then re-include only the running account

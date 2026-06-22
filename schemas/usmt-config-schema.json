@@ -18,12 +18,17 @@
         "additionalArgs": {
           "type": "ARRAY",
           "items": { "type": "STRING" },
-          "description": "Additional command line arguments passed directly to USMT"
+          "description": "Additional command line arguments passed directly to USMT. Use /v:N to control log verbosity (1=errors, 5=status, 7=verbose, 13=debug)."
         },
         "userScope": {
           "type": "STRING",
           "enum": ["current", "all"],
-          "description": "Controls which user profiles ScanState captures. 'current' (default) captures only the user running the backup; 'all' captures every profile on the machine."
+          "description": "Controls which user profiles ScanState captures. 'current' (default) captures only the user running the backup; 'all' captures every profile on the machine. Ignored when 'users' is non-empty."
+        },
+        "users": {
+          "type": "ARRAY",
+          "items": { "type": "STRING" },
+          "description": "Optional list of specific usernames to capture (e.g. 'Chris' or 'DOMAIN\\Chris'). When non-empty, takes precedence over userScope. Each entry becomes a /ui: argument; all other users are excluded via /ue:*\\*."
         }
       },
       "required": ["customPath", "xmlFiles", "additionalArgs"]

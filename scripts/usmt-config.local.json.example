@@ -1,4 +1,26 @@
 {
+  "$schema": "../schemas/usmt-config-schema.json",
+  "usmt": {
+    "customPath": "",
+
+    "userScope": "current",
+    // "userScope": "all",
+
+    "users": [],
+    // "users": ["Chris"],
+    // "users": ["DOMAIN\\Alice", "DOMAIN\\Bob"],
+
+    "xmlFiles": [
+      "MigApp.xml",
+      "MigUser.xml",
+      "ExcludeCommon.xml"
+    ],
+    "additionalArgs": [
+      "/c",
+      "/v:5",
+      "/efs:skip"
+    ]
+  },
   "backup": {
     "outputDir": "$ONEDRIVE\\MigratronBackups",
     "retentionCount": 5,
