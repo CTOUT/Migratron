@@ -273,14 +273,29 @@ try {
         # Sync USMT binaries to the backup output directory
         $binariesDest = Join-Path $outputDirResolved "USMT-Binaries"
         $scanStateDest = Join-Path $binariesDest "scanstate.exe"
+        $scanStateSource = Join-Path $usmtPath "scanstate.exe"
+        
+        $shouldCopy = $false
         if (-not (Test-Path $scanStateDest)) {
+            $shouldCopy = $true
             Log "Syncing USMT binaries to output directory..." 'INFO'
+        }
+        else {
+            $sourceFile = Get-Item $scanStateSource
+            $destFile = Get-Item $scanStateDest
+            if ($sourceFile.LastWriteTime -gt $destFile.LastWriteTime) {
+                $shouldCopy = $true
+                Log "Newer USMT binaries detected in ADK. Updating output directory..." 'INFO'
+            }
+        }
+
+        if ($shouldCopy) {
             New-Item -ItemType Directory -Path $binariesDest -Force -ErrorAction SilentlyContinue | Out-Null
             Copy-Item -Path "$usmtPath\*" -Destination $binariesDest -Recurse -Force | Out-Null
             Log "USMT Binaries copied to: $binariesDest" 'SUCCESS'
         }
         else {
-            Log "USMT Binaries already exist in output directory. Skipping copy." 'DEBUG'
+            Log "USMT Binaries are up-to-date in output directory. Skipping copy." 'DEBUG'
         }
         
         # Retention management
