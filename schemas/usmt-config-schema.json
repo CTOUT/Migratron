@@ -28,7 +28,7 @@
         "users": {
           "type": "ARRAY",
           "items": { "type": "STRING" },
-          "description": "Optional list of specific usernames to capture (e.g. 'Chris' or 'DOMAIN\\Chris'). When non-empty, takes precedence over userScope. Each entry becomes a /ui: argument; all other users are excluded via /ue:*\\*."
+          "description": "Optional list of specific usernames to capture (e.g. 'Alice' or 'DOMAIN\\Alice'). When non-empty, takes precedence over userScope. Each entry becomes a /ui: argument; all other users are excluded via /ue:*\\*."
         }
       },
       "required": ["customPath", "xmlFiles", "additionalArgs"]

@@ -20,6 +20,7 @@ Migratron bridges this gap by wrapping Microsoft's enterprise-grade **User State
 - **Backup Retention Management** — Automatically prunes older backups, keeping only the last $N$ snapshots (configured in `usmt-config.json`).
 - **Dry Run Support** — Previews USMT execution arguments and paths without committing changes or running scan/load routines.
 - **Interactive & Scriptable CLI** — Provides a central command wrapper [migratron.ps1](migratron.ps1) that launches a console menu when run without parameters, alongside automated switches.
+- **PowerShell 5.1 & 7 Compatible** — Self-elevation and scheduled task registration detect the current host at runtime (`pwsh.exe` vs `powershell.exe`) so elevated sessions always use the same shell.
 
 ---
 
@@ -93,13 +94,13 @@ Launch the toolkit without parameters to access the dashboard. If you pick an op
 
 ```powershell
 # Restore settings from a ZIP package (requires elevation)
-.\migratron.ps1 -Restore -BackupPath "$HOME\OneDrive\MigratronBackups\migratron-store-20260622-140000.zip"
+.\migratron.ps1 -Restore -BackupPath "$HOME\OneDrive\MigratronBackups\migratron-store-20260101-120000.zip"
 
 # Prompt for confirmation before restoring
-.\migratron.ps1 -Restore -BackupPath "D:\Backups\migratron-store-20260622-140000.zip" -Interactive
+.\migratron.ps1 -Restore -BackupPath "E:\Backups\migratron-store-20260101-120000.zip" -Interactive
 
 # Dry run (simulate restore without modifying settings)
-.\migratron.ps1 -Restore -BackupPath "D:\Backups\migratron-store-20260622-140000.zip" -DryRun
+.\migratron.ps1 -Restore -BackupPath "E:\Backups\migratron-store-20260101-120000.zip" -DryRun
 ```
 
 #### Configure Automated Snapshots:
@@ -119,13 +120,35 @@ Launch the toolkit without parameters to access the dashboard. If you pick an op
 
 ## Extensibility & Customisation
 
-You can customise USMT settings, folders, and rules by editing [usmt-config.json](scripts/usmt-config.json):
+You can customise USMT settings, folders, and rules by editing [usmt-config.json](scripts/usmt-config.json). Use [usmt-config.local.json](scripts/usmt-config.local.json.example) (gitignored) to override settings per machine without affecting the repository.
 
-- **`usmt.xmlFiles`**: The list of USMT rule XML configurations passed to `ScanState` and `LoadState`. By default, it uses `MigApp.xml`, `MigUser.xml`, and `ExcludeCommon.xml`.
-- **`backup.outputDir`**: Target directory for backup stores. Supports environment variables (e.g., `$HOME`, `$APPDATA`).
-- **`backup.retentionCount`**: Number of backup ZIP files to retain before deleting old ones.
-- **`backup.compress`**: Set `true` to compress stores into ZIP archives (default: `false`).
-- **`backup.excludePaths`**: A list of user-specific directory paths or drive roots to recursively exclude from migration (e.g., `["D:\\", "C:\\Users\\Public"]`). The backup engine dynamically translates these paths into a custom USMT exclusion XML on every run.
+### `usmt` section
+
+| Property | Type | Default | Description |
+|---|---|---|---|
+| `customPath` | string | `""` | Custom path to USMT `amd64` folder if not using the standard ADK installation. |
+| `userScope` | `"current"` \| `"all"` | `"current"` | Controls which profiles ScanState captures. `"current"` captures only the user running the backup; `"all"` captures every profile on the machine. Ignored when `users` is non-empty. |
+| `users` | string[] | `[]` | Explicit list of usernames to capture (e.g. `["Alice"]` or `["DOMAIN\\Alice", "DOMAIN\\Bob"]`). Takes precedence over `userScope`. Unqualified names are auto-prefixed with the current domain. |
+| `xmlFiles` | string[] | See below | USMT rule XML files passed to `ScanState`/`LoadState`. Defaults: `MigApp.xml`, `MigUser.xml`, `ExcludeCommon.xml`. |
+| `additionalArgs` | string[] | `["/c", "/v:5", "/efs:skip"]` | Extra arguments passed directly to USMT. Use `/v:N` to control log verbosity: `1` = errors, `5` = status (default), `7` = verbose, `13` = full debug. |
+
+### `backup` section
+
+| Property | Type | Default | Description |
+|---|---|---|---|
+| `outputDir` | string | `$ONEDRIVE\MigratronBackups` | Target directory for backup archives. Supports environment variables (`$HOME`, `$APPDATA`, `$ONEDRIVE`, etc.). |
+| `retentionCount` | integer | `5` | Number of backup ZIP files to retain. Older archives are pruned automatically after each successful backup. |
+| `compress` | boolean | `false` | Compress the USMT migration store into a ZIP archive after capture. |
+| `encrypt` | boolean | `false` | Placeholder for future encryption support. A runtime warning is emitted when this is `false`. |
+| `excludePaths` | string[] | `[]` | Directories or drive roots to recursively exclude (e.g. `["D:\\", "C:\\LargeFolder"]`). Dynamically generates a USMT exclusion XML (`ExcludeCustom.xml`) on each run. |
+
+### `schedule` section
+
+| Property | Type | Default | Description |
+|---|---|---|---|
+| `taskName` | string | `MigratronSnapshot` | Name of the Windows Scheduled Task. |
+| `trigger` | `"Daily"` \| `"AtLogon"` \| `"OnIdle"` | `"Daily"` | When the scheduled task fires. |
+| `time` | string | `"22:00"` | Time for `Daily` trigger in `HH:mm` format. |
 
 ### Modular Exclusions & Local Overrides
 
@@ -137,6 +160,10 @@ To prevent backing up gigabytes of unnecessary data (like games, caches, or soft
    - Add your custom folders or drive letters to the `"excludePaths"` list (e.g. `"D:\\"` or `"C:\\LargeFolder"`).
    - This file is gitignored and will override the default settings in `usmt-config.json`.
 3. **Backup Audit Trail**: Every successful snapshot packages a copy of the active XML configuration manifests in a `USMT-XML/` subdirectory within the backup store directory, ensuring you always know what rules were applied.
+
+### Secondary Drive Audit
+
+The **Scan & Audit** option ([1] in the menu) automatically detects all fixed drives present on your machine (excluding the system drive) and warns you about any that are not listed in `excludePaths`. This helps ensure you don't accidentally capture data from a games library, second data drive, or cloud sync cache.
 
 ---
 
@@ -155,9 +182,10 @@ Migratron/
 ├── scripts/
 │   ├── usmt-config.json            # Main configuration parameters (XMLs, OneDrive, retention)
 │   ├── usmt-config.local.json      # (gitignored) Local machine overrides
+│   ├── usmt-config.local.json.example  # Template for local overrides
 │   ├── ExcludeCommon.xml           # Universal USMT exclusion rules
 │   ├── utils.ps1                   # Common functions (logging, paths, USMT detection)
-│   ├── scan-system.ps1             # Audits local system configurations
+│   ├── scan-system.ps1             # Audits local system configurations and drive layout
 │   ├── backup-profile.ps1          # Invokes ScanState and packages snapshots
 │   ├── restore-profile.ps1         # Invokes LoadState to restore snapshots
 │   └── schedule-task.ps1           # Registers/unregisters Windows Scheduled Tasks
