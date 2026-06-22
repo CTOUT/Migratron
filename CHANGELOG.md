@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Named User List (`usmt.users[]`)** — New config array for explicitly naming which user accounts to capture (e.g. `["Alice"]` or `["DOMAIN\\Alice", "DOMAIN\\Bob"]`). When non-empty, takes precedence over `userScope`. Each entry becomes a `/ui:` argument; unqualified names are auto-prefixed with `$env:USERDOMAIN`. Displayed in the scan audit and logged during backup.
 - **Standalone Restore Binaries** — `backup-profile.ps1` now automatically syncs a copy of the USMT executables (including `usmtutils.exe`) directly into a `USMT-Binaries/` directory within the backup output path. This ensures users can perform restores or manual extractions on new machines instantly via OneDrive, completely removing the requirement to download and install the Windows ADK on the destination PC.
 
+### Fixed
+
+- **Retention of Uncompressed Backups (`scripts/backup-profile.ps1`)** — Fixed a bug where the backup retention policy would ignore uncompressed backups (when `compress: false`). It now correctly identifies both `.zip` archives and raw uncompressed folders, sorting and pruning them together accurately based on the `retentionCount` limit.
+
 ### Changed
 
 - **Dynamic Architecture Detection (`scripts/utils.ps1`)** — `Find-UsmtPath` now dynamically detects the host OS architecture (`$env:PROCESSOR_ARCHITECTURE`) and preferentially resolves the native USMT binaries (`amd64`, `arm64`, or `x86`). This ensures ARM64 devices run native ARM64 USMT binaries rather than falling back to amd64 emulation. The standalone backup copies will also sync the correct native architecture.

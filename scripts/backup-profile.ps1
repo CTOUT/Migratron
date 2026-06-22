@@ -283,14 +283,17 @@ try {
         Log "Checking backup retention policy..."
         $retentionLimit = $config.backup.retentionCount
         if ($retentionLimit -gt 0) {
-            $backups = Get-ChildItem -Path $outputDirResolved -Filter "migratron-store-*.zip" -File | Sort-Object LastWriteTime
+            $backups = Get-ChildItem -Path $outputDirResolved -Filter "migratron-store-*" | 
+                       Where-Object { $_.Name -match '^migratron-store-\d{8}-\d{6}(\.zip)?$' } | 
+                       Sort-Object LastWriteTime
+            
             if ($backups.Count -gt $retentionLimit) {
                 $deleteCount = $backups.Count - $retentionLimit
                 Log "Found $($backups.Count) backups. Retention policy is $retentionLimit. Deleting oldest $deleteCount backup(s)." 'WARN'
                 for ($i = 0; $i -lt $deleteCount; $i++) {
                     $oldBackup = $backups[$i]
                     Log "  Deleting: $($oldBackup.Name)" 'WARN'
-                    Remove-Item -Path $oldBackup.FullName -Force
+                    Remove-Item -Path $oldBackup.FullName -Recurse -Force
                 }
             }
         }
