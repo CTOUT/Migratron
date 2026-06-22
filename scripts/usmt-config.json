@@ -11,7 +11,7 @@
     ],
     "additionalArgs": [
       "/c",
-      "/v:5",
+      "/v:1",
       "/efs:skip"
     ]
   },

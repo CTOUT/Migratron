@@ -145,7 +145,7 @@ You can customise USMT settings, folders, and rules by editing [usmt-config.json
 | `userScope` | `"current"` \| `"all"` | `"current"` | Controls which profiles ScanState captures. `"current"` captures only the user running the backup; `"all"` captures every profile on the machine. Ignored when `users` is non-empty. |
 | `users` | string[] | `[]` | Explicit list of usernames to capture (e.g. `["Alice"]` or `["DOMAIN\\Alice", "DOMAIN\\Bob"]`). Takes precedence over `userScope`. Unqualified names are auto-prefixed with the current domain. |
 | `xmlFiles` | string[] | See below | USMT rule XML files passed to `ScanState`/`LoadState`. Defaults: `MigApp.xml`, `MigUser.xml`, `ExcludeCommon.xml`. |
-| `additionalArgs` | string[] | `["/c", "/v:5", "/efs:skip"]` | Extra arguments passed directly to USMT. Use `/v:N` to control log verbosity: `1` = errors, `5` = status (default), `7` = verbose, `13` = full debug. |
+| `additionalArgs` | string[] | `["/c", "/v:1", "/efs:skip"]` | Extra arguments passed directly to USMT. Use `/v:N` to control log verbosity: `1` = errors (default), `5` = status, `7` = verbose, `13` = full debug. |
 
 ### `backup` section
 

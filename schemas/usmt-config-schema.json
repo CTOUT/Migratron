@@ -18,7 +18,7 @@
         "additionalArgs": {
           "type": "ARRAY",
           "items": { "type": "STRING" },
-          "description": "Additional command line arguments passed directly to USMT. Use /v:N to control log verbosity (1=errors, 5=status, 7=verbose, 13=debug)."
+          "description": "Additional flags passed to ScanState/LoadState. Common flags include /c (continue on non-fatal errors), /v:1 (error logging only, default), /v:5 (verbose status logging), /v:13 (full debug logging), and /efs:skip."
         },
         "userScope": {
           "type": "STRING",
