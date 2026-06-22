@@ -13,7 +13,8 @@ Migratron follows [Semantic Versioning](https://semver.org/). Security fixes are
 
 **Please do not report security vulnerabilities through public GitHub issues.**
 
-Open a [GitHub Security Advisory](https://github.com/CTOUT/Migratron/security/advisories/new) or email **[security@ctout.dev](mailto:security@ctout.dev)**.
+Open a [GitHub Security Advisory](https://github.com/CTOUT/Migratron/security/advisories/new) to report a vulnerability privately.
+
 
 Include:
 
