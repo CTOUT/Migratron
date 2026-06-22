@@ -39,9 +39,13 @@ if ($Register) {
     
     # 1. Define the action to run PowerShell script
     $scriptPath = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot "..\migratron.ps1"))
-    $arguments = "-NoProfile -ExecutionPolicy RemoteSigned -File `"$scriptPath`" -Backup -SkipSensitive"
-    
-    $action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument $arguments
+    $arguments  = "-NoProfile -ExecutionPolicy RemoteSigned -File `"$scriptPath`" -Backup -SkipSensitive"
+
+    # Register the task using the same PowerShell host that is currently running
+    # (pwsh.exe for PS 7+, powershell.exe for Windows PowerShell 5.1)
+    $psExe = if ($PSVersionTable.PSVersion.Major -ge 7) { 'pwsh.exe' } else { 'powershell.exe' }
+
+    $action = New-ScheduledTaskAction -Execute $psExe -Argument $arguments
     
     # 2. Define the trigger
     $trigger = switch ($TriggerType) {
@@ -88,6 +92,7 @@ if ($Register) {
         Register-ScheduledTask -TaskName $TaskName -Action $action -Trigger $trigger -Principal $principal -Settings $settings | Out-Null
         Log "Successfully registered scheduled task!" 'SUCCESS'
         Log "Task Name: $TaskName" 'INFO'
+        Log "Shell    : $psExe" 'INFO'
         $triggerStr = $TriggerType
         if ($TriggerType -eq "Daily") { $triggerStr = "$TriggerType at $Time" }
         Log "Trigger  : $triggerStr" 'INFO'

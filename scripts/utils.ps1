@@ -144,13 +144,16 @@ function Assert-AdminPrivileges {
         $elevateArgs = [System.Collections.Generic.List[string]]::new()
         $elevateArgs.Add('-NoProfile')
         $elevateArgs.Add('-ExecutionPolicy')
-        $elevateArgs.Add('RemoteSigned')   # #7: RemoteSigned instead of Bypass
+        $elevateArgs.Add('RemoteSigned')
         $elevateArgs.Add('-File')
         $elevateArgs.Add($myPath)
         foreach ($a in $argsList) { $elevateArgs.Add($a) }
 
-        Log "Elevating process..." 'INFO'
-        Start-Process powershell.exe -ArgumentList $elevateArgs -Verb RunAs
+        # Re-elevate using the same PowerShell host that is currently running
+        # (pwsh.exe for PS 7+, powershell.exe for Windows PowerShell 5.1)
+        $psExe = if ($PSVersionTable.PSVersion.Major -ge 7) { 'pwsh.exe' } else { 'powershell.exe' }
+        Log "Elevating process via $psExe..." 'INFO'
+        Start-Process $psExe -ArgumentList $elevateArgs -Verb RunAs
         exit
     }
 }
