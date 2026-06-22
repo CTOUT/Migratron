@@ -11,7 +11,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **Repository Initialisation** — Established directory layout, MIT license, citation templates (`CITATION.cff`), standard `.gitignore`, `.gitattributes`, `.markdownlint.json`, and `llms.txt`.
+- **CSpell Configuration (`cspell.json`)** — Added spell-check configuration targeting en-GB with a full custom word list covering USMT terminology, PowerShell API names, and Migratron-specific identifiers.
+
+### Changed
+
+- **Security Hardening (`scripts/utils.ps1`)** — `Assert-AdminPrivileges` now accepts caller-supplied bound parameters and builds the UAC elevation `ArgumentList` as a typed string array with single-quote-escaped values, preventing shell metacharacter injection during self-elevation.
+- **Security Hardening (`migratron.ps1`)** — All `Assert-AdminPrivileges` calls now forward `$PSBoundParameters`. Interactive scheduled-task input validated against an allowlist (`Daily`, `AtLogon`, `OnIdle`) and HH:mm regex before being passed to child scripts.
+- **Security Hardening (`scripts/backup-profile.ps1`)** — `additionalArgs` from config filtered through a strict USMT flag allowlist. `excludePaths` values XML-encoded via `SecurityElement::Escape()` before embedding in generated XML. Runtime warning added when `encrypt: false`. Staging and log paths moved from repo root to `$env:TEMP`.
+- **Security Hardening (`scripts/restore-profile.ps1`)** — Added Zip Slip protection (all extracted paths verified within staging directory before proceeding). Same `additionalArgs` allowlist applied to LoadState. Staging and log paths moved to `$env:TEMP`.
+- **Security Hardening (`scripts/schedule-task.ps1`)** — Replaced `-ExecutionPolicy Bypass` with `-ExecutionPolicy RemoteSigned` in the scheduled task action.
+- **Security Hardening (`scripts/utils.ps1`)** — Replaced `-ExecutionPolicy Bypass` with `-ExecutionPolicy RemoteSigned` in self-elevation.
+- **Documentation (`SECURITY.md`)** — Corrected stale `config-manifest.json` reference to `usmt-config.json` and `usmt-config.local.json`.
+- **Documentation (`README.md`)** — Updated repository structure table to reflect current files; corrected `backup.compress` default; converted to en-GB spelling throughout.
+- **Documentation (`CONTRIBUTING.md`)** — Updated stale file references (`config-manifest.json` → `usmt-config.json`); converted to en-GB spelling throughout.
+
+### Removed
+
+- **`Copilot Suggestions.md`** — Removed original planning/prompt document; MVP is fully implemented.
+
+---
+
+## [0.1.0] — 2026-06-22
+
+### Added
+
+- **Repository Initialisation** — Established directory layout, MIT licence, citation templates (`CITATION.cff`), standard `.gitignore`, `.gitattributes`, `.markdownlint.json`, and `llms.txt`.
 - **USMT-Based Architecture** — Transitioned Migratron from a simple file copying utility into a robust Windows User State Migration Tool (USMT) wrapper.
 - **System Audit Module (`scripts/scan-system.ps1`)** — Added support to scan for USMT binaries, rule XML validation, OneDrive paths, and local backup stores.
 - **USMT Staging & Backup Module (`scripts/backup-profile.ps1`)** — Created an elevated driver to run `scanstate.exe` with standard rules (`MigApp.xml`, `MigUser.xml`), saving ZIPs directly into your OneDrive backup directories.

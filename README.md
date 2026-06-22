@@ -6,7 +6,7 @@ A **PowerShell User State Migration Tool (USMT) wrapper** to scan, snapshot, and
 
 ## Why Migratron?
 
-Although cloud-sync services like **OneDrive** and **Microsoft Accounts** synchronize primary user directories and basic OS settings, they leave out critical developer configurations, AppData, and registry settings.
+Although cloud-sync services like **OneDrive** and **Microsoft Accounts** synchronise primary user directories and basic OS settings, they leave out critical developer configurations, AppData, and registry settings.
 
 Migratron bridges this gap by wrapping Microsoft's enterprise-grade **User State Migration Tool (USMT)**. It captures a point-in-time snapshot of your local user configurations, packages them into a ZIP archive, and drops them in your local OneDrive folder. Once OneDrive syncs the archive down to your new PC, Migratron restores your user state in a single command.
 
@@ -19,7 +19,7 @@ Migratron bridges this gap by wrapping Microsoft's enterprise-grade **User State
 - **Automated Scheduled Tasks** — Registers an elevated Windows Scheduled Task running under your user credentials to run daily backups at a scheduled time, on user logon, or during idle states.
 - **Backup Retention Management** — Automatically prunes older backups, keeping only the last $N$ snapshots (configured in `usmt-config.json`).
 - **Dry Run Support** — Previews USMT execution arguments and paths without committing changes or running scan/load routines.
-- **Interactive & Scriptable CLI** — Provides a central command wrapper [migratron.ps1](file:///D:/Repos/Migratron/migratron.ps1) that launches a console menu when run without parameters, alongside automated switches.
+- **Interactive & Scriptable CLI** — Provides a central command wrapper [migratron.ps1](migratron.ps1) that launches a console menu when run without parameters, alongside automated switches.
 
 ---
 
@@ -44,7 +44,7 @@ USMT is part of the **Windows Assessment and Deployment Kit (ADK)**. You must ha
    - If you want a self-contained setup, copy the `amd64` folder from an ADK installation and paste it into a folder named `usmt` inside this repository: `Migratron/usmt/amd64/`.
    - Migratron will automatically find and use the binaries from this folder.
 3. **Custom Config Path**:
-   - Alternatively, edit `customPath` in [usmt-config.json](file:///D:/Repos/Migratron/scripts/usmt-config.json) to point to your `scanstate.exe` directory.
+   - Alternatively, edit `customPath` in [usmt-config.json](scripts/usmt-config.json) to point to your `scanstate.exe` directory.
 
 ---
 
@@ -117,14 +117,14 @@ Launch the toolkit without parameters to access the dashboard. If you pick an op
 
 ---
 
-## Extensibility & Customization
+## Extensibility & Customisation
 
-You can customize USMT settings, folders, and rules by editing [usmt-config.json](file:///D:/Repos/Migratron/scripts/usmt-config.json):
+You can customise USMT settings, folders, and rules by editing [usmt-config.json](scripts/usmt-config.json):
 
 - **`usmt.xmlFiles`**: The list of USMT rule XML configurations passed to `ScanState` and `LoadState`. By default, it uses `MigApp.xml`, `MigUser.xml`, and `ExcludeCommon.xml`.
 - **`backup.outputDir`**: Target directory for backup stores. Supports environment variables (e.g., `$HOME`, `$APPDATA`).
 - **`backup.retentionCount`**: Number of backup ZIP files to retain before deleting old ones.
-- **`backup.compress`**: Set `true` to compress stores into ZIP archives (default).
+- **`backup.compress`**: Set `true` to compress stores into ZIP archives (default: `false`).
 - **`backup.excludePaths`**: A list of user-specific directory paths or drive roots to recursively exclude from migration (e.g., `["D:\\", "C:\\Users\\Public"]`). The backup engine dynamically translates these paths into a custom USMT exclusion XML on every run.
 
 ### Modular Exclusions & Local Overrides
@@ -132,8 +132,8 @@ You can customize USMT settings, folders, and rules by editing [usmt-config.json
 To prevent backing up gigabytes of unnecessary data (like games, caches, or software libraries) while keeping the repository generic and safe for GitHub, Migratron uses a layered exclusion and configuration design:
 
 1. **Universal Exclusions (`ExcludeCommon.xml`)**: Exclusions shared by all setups (Windows Defender scan history, Microsoft Office WebView2/telemetry caches, hardware driver installers like `C:\AMD` or `C:\Intel`, and the `C:\Users\Public` folder).
-2. **User-Specific Configuration (`usmt-config.local.json`)**: To prevent local customizations from being tracked by Git, you can create a local override file.
-   - Simply copy the template [usmt-config.local.json.example](file:///D:/Repos/Migratron/scripts/usmt-config.local.json.example) to `usmt-config.local.json` in the same directory.
+2. **User-Specific Configuration (`usmt-config.local.json`)**: To prevent local customisations from being tracked by Git, you can create a local override file.
+   - Simply copy the template [usmt-config.local.json.example](scripts/usmt-config.local.json.example) to `usmt-config.local.json` in the same directory.
    - Add your custom folders or drive letters to the `"excludePaths"` list (e.g. `"D:\\"` or `"C:\\LargeFolder"`).
    - This file is gitignored and will override the default settings in `usmt-config.json`.
 3. **Backup Audit Trail**: Every successful snapshot packages a copy of the active XML configuration manifests in a `USMT-XML/` subdirectory within the backup store directory, ensuring you always know what rules were applied.
@@ -151,23 +151,26 @@ Migratron/
 │       ├── MigApp.xml
 │       └── MigUser.xml
 ├── schemas/
-│   └── manifest-schema.json        # JSON Schema for manifest/config validation
+│   └── usmt-config-schema.json     # JSON Schema for usmt-config.json validation
 ├── scripts/
 │   ├── usmt-config.json            # Main configuration parameters (XMLs, OneDrive, retention)
+│   ├── usmt-config.local.json      # (gitignored) Local machine overrides
+│   ├── ExcludeCommon.xml           # Universal USMT exclusion rules
 │   ├── utils.ps1                   # Common functions (logging, paths, USMT detection)
 │   ├── scan-system.ps1             # Audits local system configurations
 │   ├── backup-profile.ps1          # Invokes ScanState and packages snapshots
 │   ├── restore-profile.ps1         # Invokes LoadState to restore snapshots
 │   └── schedule-task.ps1           # Registers/unregisters Windows Scheduled Tasks
 ├── migratron.ps1                   # Main entry point and interactive CLI menu
+├── cspell.json                     # CSpell spell-check configuration (en-GB)
 ├── README.md                       # Project documentation
 ├── TODO.md                         # Roadmap and planned tasks
 ├── CHANGELOG.md                    # Keep a Changelog entries
-└── LICENSE                         # MIT License file
+└── LICENSE                         # MIT Licence file
 ```
 
 ---
 
-## License
+## Licence
 
-This project is licensed under the MIT License - see the [LICENSE](file:///D:/Repos/Migratron/LICENSE) file for details.
+This project is licensed under the MIT Licence — see the [LICENSE](LICENSE) file for details.

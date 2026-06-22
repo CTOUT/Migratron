@@ -17,11 +17,11 @@ A [pull request template](.github/pull_request_template.md) is pre-filled when y
 - [ ] `CHANGELOG.md` updated under `[Unreleased] → Added / Changed / Fixed`
 - [ ] `README.md` updated if user-facing behaviour or commands change
 
-### Manifest changes (`scripts/config-manifest.json`)
+### Configuration changes (`scripts/usmt-config.json`)
 
-- [ ] New items follow the JSON Schema under `schemas/manifest-schema.json`
+- [ ] New properties follow the JSON Schema under `schemas/usmt-config-schema.json`
 - [ ] Environment variables in paths are correctly formatted (e.g. `$HOME`, `$APPDATA`, `$LOCALAPPDATA`)
-- [ ] Commands, file paths, and registry keys verified against a real Windows installation
+- [ ] Any new `additionalArgs` values are tested against the allowlist in `backup-profile.ps1` and `restore-profile.ps1`
 - [ ] Sensitive items (like SSH keys, credentials) are marked as optional and include warnings
 
 ### Repository / docs changes
@@ -29,6 +29,7 @@ A [pull request template](.github/pull_request_template.md) is pre-filled when y
 - [ ] `README.md` Repository Structure section reflects any new/removed files
 - [ ] `CHANGELOG.md` updated
 - [ ] `TODO.md` updated if a tracked item is completed or a new one is added
+- [ ] Spelling checked against en-GB (cspell: `npx cspell "**"`)
 
 ---
 
