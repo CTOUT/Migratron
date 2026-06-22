@@ -290,6 +290,9 @@ try {
         }
 
         if ($shouldCopy) {
+            if (Test-Path $binariesDest) {
+                Remove-Item -Path $binariesDest -Recurse -Force -ErrorAction SilentlyContinue | Out-Null
+            }
             New-Item -ItemType Directory -Path $binariesDest -Force -ErrorAction SilentlyContinue | Out-Null
             Copy-Item -Path "$usmtPath\*" -Destination $binariesDest -Recurse -Force | Out-Null
             Log "USMT Binaries copied to: $binariesDest" 'SUCCESS'
