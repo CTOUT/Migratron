@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Migratron USMT Configuration Schema",
+  "type": "OBJECT",
+  "properties": {
+    "usmt": {
+      "type": "OBJECT",
+      "properties": {
+        "customPath": { "type": "STRING", "description": "Custom path to USMT amd64 folder if not standard ADK installation" },
+        "xmlFiles": {
+          "type": "ARRAY",
+          "items": { "type": "STRING" },
+          "description": "USMT rule XML files to pass to ScanState/LoadState"
+        },
+        "additionalArgs": {
+          "type": "ARRAY",
+          "items": { "type": "STRING" },
+          "description": "Additional command line arguments passed directly to USMT"
+        }
+      },
+      "required": ["customPath", "xmlFiles", "additionalArgs"]
+    },
+    "backup": {
+      "type": "OBJECT",
+      "properties": {
+        "outputDir": { "type": "STRING", "description": "Target folder for backup archives (supports environment variables)" },
+        "retentionCount": { "type": "INTEGER", "description": "Number of backup zip files to keep" },
+        "compress": { "type": "BOOLEAN", "description": "Compress backup store into ZIP archive" },
+        "encrypt": { "type": "BOOLEAN", "description": "Enable encryption for backup archives (planned)" },
+        "excludePaths": {
+          "type": "ARRAY",
+          "items": { "type": "STRING" },
+          "description": "User-specific directories or drives to exclude recursively"
+        }
+      },
+      "required": ["outputDir", "retentionCount", "compress", "encrypt"]
+    },
+    "schedule": {
+      "type": "OBJECT",
+      "properties": {
+        "taskName": { "type": "STRING", "description": "Name of the Windows Scheduled Task" },
+        "trigger": { "type": "STRING", "enum": ["Daily", "AtLogon", "OnIdle"], "description": "Task scheduler trigger" },
+        "time": { "type": "STRING", "description": "Trigger time for Daily task (HH:mm format)" }
+      },
+      "required": ["taskName", "trigger", "time"]
+    }
+  },
+  "required": ["usmt", "backup", "schedule"]
+}

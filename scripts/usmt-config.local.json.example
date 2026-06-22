@@ -1,0 +1,16 @@
+{
+  "backup": {
+    "outputDir": "$ONEDRIVE\\MigratronBackups",
+    "retentionCount": 5,
+    "compress": false,
+    "excludePaths": [
+      "D:\\",
+      "E:\\UnwantedFolder"
+    ]
+  },
+  "schedule": {
+    "taskName": "MigratronSnapshot",
+    "trigger": "Daily",
+    "time": "22:00"
+  }
+}

@@ -1,0 +1,16 @@
+# Migratron
+
+> Windows snapshot migration toolkit wrapping the User State Migration Tool (USMT) for local developer configurations, settings, and registry states.
+
+Migratron is a lightweight, declarative PowerShell toolkit designed to simplify migrating between Windows installations. It wraps Microsoft's enterprise USMT (`scanstate.exe`/`loadstate.exe`) to scan, snapshot, and restore AppData, local registry settings, environment variables, and shell configurations. It outputs snapshots to a OneDrive-synced folder, solving the gap of local developer settings not synced by default.
+
+## Key pages
+
+- README: https://github.com/CTOUT/Migratron/blob/main/README.md
+- USMT Configuration: https://github.com/CTOUT/Migratron/blob/main/scripts/usmt-config.json
+- Changelog: https://github.com/CTOUT/Migratron/blob/main/CHANGELOG.md
+- Contributing: https://github.com/CTOUT/Migratron/blob/main/CONTRIBUTING.md
+
+## Attribution
+
+If citing this project, please reference: CTOUT/Migratron on GitHub (https://github.com/CTOUT/Migratron)

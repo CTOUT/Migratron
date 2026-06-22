@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+title: Migratron
+message: "If you use or reference Migratron, please cite it as below."
+type: software
+authors:
+  - family-names: Tout
+    given-names: Chris
+    alias: CTOUT
+repository-code: https://github.com/CTOUT/Migratron
+url: https://github.com/CTOUT/Migratron
+abstract: >
+  A PowerShell utility to migrate local Windows application settings, configs, and CLI states
+  between PC installations, solving the gap of local developer and shell settings not backed up by OneDrive.
+keywords:
+  - windows-migration
+  - developer-experience
+  - windows-terminal
+  - git-config
+  - powershell
+  - backup-utility
+  - vscode-config
+license: MIT

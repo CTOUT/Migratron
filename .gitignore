@@ -1,0 +1,45 @@
+# Windows / PowerShell / OS files
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# Migratron backup folders and archives (default outputs)
+.migratron-backups/
+migratron-backup-*.zip
+migratron-backup-*.tar.gz
+*.reg
+
+# Log files
+*.log
+logs/
+MigLog.xml
+
+# IDE / Editor configuration
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# Node / package manager files (in case user adds frontend/visual tools)
+node_modules/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Local environment file overrides
+.env
+.env.local
+.env.*.local
+
+# Dynamic USMT rules and staging/restore stores
+**/ExcludeCustom.xml
+**/usmt-config.local.json
+.migratron-temp-store-*/
+.migratron-temp-restore-*/
+.migratron-temp-store-*
+.migratron-temp-restore-*
+
