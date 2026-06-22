@@ -66,10 +66,11 @@ Launch the toolkit without parameters to access the dashboard. If you pick an op
 ==================================================
 
   [1] Scan and Audit Local Settings
-  [2] Backup Settings to ZIP Archive (Requires Admin)
-  [3] Restore Settings from ZIP Archive (Requires Admin)
-  [4] Manage Automatic Scheduled Task (Requires Admin)
-  [5] Exit
+  [2] List Existing Backups
+  [3] Backup Settings to ZIP Archive (Requires Admin)
+  [4] Restore Settings from ZIP Archive (Requires Admin)
+  [5] Manage Automatic Scheduled Task (Requires Admin)
+  [6] Exit
 ```
 
 ### 2. Command Line CLI Usage
@@ -78,6 +79,12 @@ Launch the toolkit without parameters to access the dashboard. If you pick an op
 
 ```powershell
 .\migratron.ps1 -Scan
+```
+
+#### List existing backups:
+
+```powershell
+.\migratron.ps1 -List
 ```
 
 #### Run backup:
@@ -201,6 +208,7 @@ Migratron/
 │   ├── ExcludeCommon.xml           # Universal USMT exclusion rules
 │   ├── utils.ps1                   # Common functions (logging, paths, USMT detection)
 │   ├── scan-system.ps1             # Audits local system configurations and drive layout
+│   ├── list-backups.ps1            # Lists available compressed and uncompressed backup stores
 │   ├── backup-profile.ps1          # Invokes ScanState and packages snapshots
 │   ├── restore-profile.ps1         # Invokes LoadState to restore snapshots
 │   └── schedule-task.ps1           # Registers/unregisters Windows Scheduled Tasks
