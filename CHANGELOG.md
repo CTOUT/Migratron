@@ -23,6 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Silent Scheduled Tasks (`scripts/schedule-task.ps1`)** — Automated tasks now execute PowerShell with `-WindowStyle Hidden`, preventing the console window from popping up and stealing focus during the daily background run.
+- **Smart Binary Sync (`scripts/backup-profile.ps1`)** — The USMT binary sync to OneDrive is now strictly differential. It checks the `LastWriteTime` of the local ADK against the OneDrive copy. If they are identical, it skips the 30MB copy to save network bandwidth. If the local ADK is newer, it explicitly deletes the OneDrive copy first to prevent orphaned DLLs before syncing the fresh binaries.
 - **Retention of Uncompressed Backups (`scripts/backup-profile.ps1`)** — Fixed a bug where the backup retention policy would ignore uncompressed backups (when `compress: false`). It now correctly identifies both `.zip` archives and raw uncompressed folders, sorting and pruning them together accurately based on the `retentionCount` limit.
 
 ### Changed
