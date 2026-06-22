@@ -77,25 +77,7 @@ else {
 }
 
 # 4. Check Stored Snapshots
-Log "Backup Output Directory: $outputDirResolved" 'INFO'
-if (Test-Path $outputDirResolved) {
-    $backups = Get-ChildItem -Path $outputDirResolved -Filter "migratron-store-*" | 
-               Where-Object { $_.Name -match '^migratron-store-\d{8}-\d{6}(\.zip)?$' } | 
-               Sort-Object LastWriteTime -Descending
-    if ($backups.Count -gt 0) {
-        Log "Found $($backups.Count) existing snapshot(s):" 'SUCCESS'
-        foreach ($b in $backups) {
-            $size = Get-FormatSize -Bytes $b.Length
-            Log "  - $($b.Name) (Size: $size, Modified: $($b.LastWriteTime))" 'INFO'
-        }
-    }
-    else {
-        Log "No previous snapshots found in the output directory." 'INFO'
-    }
-}
-else {
-    Log "Output directory does not exist yet (it will be created during the first backup)." 'INFO'
-}
+& (Join-Path $PSScriptRoot "list-backups.ps1") -ConfigPath $ConfigPath
 
 # 5. Secondary Drive Audit
 # Enumerate all fixed local drives except C: and warn about any not covered by excludePaths.

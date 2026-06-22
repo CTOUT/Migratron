@@ -55,6 +55,7 @@
 [CmdletBinding()]
 param(
     [switch]$Scan,
+    [switch]$List,
     [switch]$Backup,
     [switch]$Restore,
     [string]$BackupPath,
@@ -74,11 +75,15 @@ $ScriptDir = Join-Path $PSScriptRoot "scripts"
 . (Join-Path $ScriptDir "utils.ps1")
 
 # Route commands if switches are passed
-$hasSwitch = $Scan -or $Backup -or $Restore -or $RegisterTask -or $UnregisterTask
+$hasSwitch = $Scan -or $List -or $Backup -or $Restore -or $RegisterTask -or $UnregisterTask
 
 if ($hasSwitch) {
     if ($Scan) {
         & (Join-Path $ScriptDir "scan-system.ps1")
+    }
+    
+    if ($List) {
+        & (Join-Path $ScriptDir "list-backups.ps1")
     }
     
     if ($Backup) {
@@ -125,13 +130,14 @@ else {
         Write-Host "==================================================" -ForegroundColor Magenta
         Write-Host ""
         Write-Host "  [1] Scan and Audit Local Settings"
-        Write-Host "  [2] Backup Settings to ZIP Archive (Requires Admin)"
-        Write-Host "  [3] Restore Settings from ZIP Archive (Requires Admin)"
-        Write-Host "  [4] Manage Automatic Scheduled Task (Requires Admin)"
-        Write-Host "  [5] Exit"
+        Write-Host "  [2] List Existing Backups"
+        Write-Host "  [3] Backup Settings to ZIP Archive (Requires Admin)"
+        Write-Host "  [4] Restore Settings from ZIP Archive (Requires Admin)"
+        Write-Host "  [5] Manage Automatic Scheduled Task (Requires Admin)"
+        Write-Host "  [6] Exit"
         Write-Host ""
         
-        $choice = Read-Host "Select an option [1-5]"
+        $choice = Read-Host "Select an option [1-6]"
         
         switch ($choice) {
             "1" {
@@ -140,6 +146,11 @@ else {
                 Read-Host "`nPress Enter to return to menu..."
             }
             "2" {
+                Write-Host ""
+                & (Join-Path $ScriptDir "list-backups.ps1")
+                Read-Host "`nPress Enter to return to menu..."
+            }
+            "3" {
                 Write-Host ""
                 # This will prompt UAC and run in an elevated window if not already admin
                 Assert-AdminPrivileges -CallerBoundParameters $PSBoundParameters
@@ -153,7 +164,7 @@ else {
                 & (Join-Path $ScriptDir "backup-profile.ps1") @params
                 Read-Host "`nPress Enter to return to menu..."
             }
-            "3" {
+            "4" {
                 Write-Host ""
                 Assert-AdminPrivileges -CallerBoundParameters $PSBoundParameters
                 
@@ -179,7 +190,7 @@ else {
                 & (Join-Path $ScriptDir "restore-profile.ps1") @params
                 Read-Host "`nPress Enter to return to menu..."
             }
-            "4" {
+            "5" {
                 Write-Host ""
                 Assert-AdminPrivileges -CallerBoundParameters $PSBoundParameters
                 
@@ -214,12 +225,12 @@ else {
                 }
                 Read-Host "`nPress Enter to return to menu..."
             }
-            "5" {
+            "6" {
                 Write-Host "`nGoodbye!" -ForegroundColor Cyan
                 return
             }
             default {
-                Log "Invalid choice. Please enter a value between 1 and 5." 'WARN'
+                Log "Invalid choice. Please enter a value between 1 and 6." 'WARN'
                 Start-Sleep -Seconds 1
             }
         }
