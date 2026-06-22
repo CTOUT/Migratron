@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Dynamic Architecture Detection (`scripts/utils.ps1`)** — `Find-UsmtPath` now dynamically detects the host OS architecture (`$env:PROCESSOR_ARCHITECTURE`) and preferentially resolves the native USMT binaries (`amd64`, `arm64`, or `x86`). This ensures ARM64 devices run native ARM64 USMT binaries rather than falling back to amd64 emulation. The standalone backup copies will also sync the correct native architecture.
 - **USMT Log Verbosity (`usmt-config.json`)** — Default `/v:13` (full debug dump, ~85k lines) reduced to `/v:5` (key status messages). Override to `/v:7` or `/v:13` in `usmt-config.local.json` when troubleshooting.
 - **PowerShell 7 Compatibility (`scripts/utils.ps1`, `scripts/schedule-task.ps1`)** — Self-elevation and scheduled task registration now detect the current PowerShell host at runtime (`pwsh.exe` for PS 7+, `powershell.exe` for Windows PowerShell 5.1), ensuring elevated sessions and scheduled tasks always run in the same shell they were launched from.
 - **Security Hardening (`scripts/utils.ps1`)** — `Assert-AdminPrivileges` now accepts caller-supplied bound parameters and builds the UAC elevation `ArgumentList` as a typed string array with single-quote-escaped values, preventing shell metacharacter injection during self-elevation.

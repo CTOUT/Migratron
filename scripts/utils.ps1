@@ -171,11 +171,17 @@ function Find-UsmtPath {
     }
     catch {}
     
+    $arch = switch ($env:PROCESSOR_ARCHITECTURE.ToLower()) {
+        'arm64' { 'arm64' }
+        'x86'   { 'x86' }
+        default { 'amd64' }
+    }
+    
     # 2. Check local repo folders (helps users run self-contained USMT)
     $localPaths = @(
-        (Join-Path $PSScriptRoot "..\usmt\amd64"),
+        (Join-Path $PSScriptRoot "..\usmt\$arch"),
         (Join-Path $PSScriptRoot "..\usmt"),
-        (Join-Path $PSScriptRoot "usmt\amd64"),
+        (Join-Path $PSScriptRoot "usmt\$arch"),
         (Join-Path $PSScriptRoot "usmt")
     )
     foreach ($path in $localPaths) {
@@ -188,12 +194,18 @@ function Find-UsmtPath {
     }
     
     # 3. Check Windows ADK standard directories
-    $adkPaths = @(
-        "C:\Program Files (x86)\Windows Kits\10\Assessment and Deployment Kit\User State Migration Tool\amd64",
-        "C:\Program Files\Windows Kits\10\Assessment and Deployment Kit\User State Migration Tool\amd64",
-        "C:\Program Files (x86)\Windows Kits\10\Assessment and Deployment Kit\User State Migration Tool\x86",
-        "C:\Program Files\Windows Kits\10\Assessment and Deployment Kit\User State Migration Tool\x86"
+    $adkBasePaths = @(
+        "C:\Program Files (x86)\Windows Kits\10\Assessment and Deployment Kit\User State Migration Tool",
+        "C:\Program Files\Windows Kits\10\Assessment and Deployment Kit\User State Migration Tool"
     )
+    
+    $adkPaths = @()
+    foreach ($base in $adkBasePaths) {
+        $adkPaths += Join-Path $base $arch
+        if ($arch -ne 'amd64') { $adkPaths += Join-Path $base "amd64" } # Fallback to amd64 if native ARM64 is missing
+        if ($arch -ne 'x86') { $adkPaths += Join-Path $base "x86" }
+    }
+    
     foreach ($path in $adkPaths) {
         if (Test-Path $path) {
             if (Test-Path (Join-Path $path "scanstate.exe")) {

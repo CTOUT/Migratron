@@ -38,12 +38,12 @@ USMT is part of the **Windows Assessment and Deployment Kit (ADK)**. You must ha
 
      ![Windows ADK installer with only the User State Migration Tool (USMT) component selected](docs/images/adk-usmt-install.png)
 
-   - Migratron will automatically detect USMT in the default ADK directory:  
-     `C:\Program Files (x86)\Windows Kits\10\Assessment and Deployment Kit\User State Migration Tool\amd64`
+   - Migratron will automatically detect the correct architecture (`amd64`, `arm64`, or `x86`) in the default ADK directory:
+     `C:\Program Files (x86)\Windows Kits\10\Assessment and Deployment Kit\User State Migration Tool\<arch>`
 
 2. **Self-Contained Repository (Portable)**:
-   - If you want a self-contained setup, copy the `amd64` folder from an ADK installation and paste it into a folder named `usmt` inside this repository: `Migratron/usmt/amd64/`.
-   - Migratron will automatically find and use the binaries from this folder.
+   - If you want a self-contained setup, copy the architecture folder (e.g., `amd64` or `arm64`) from an ADK installation and paste it into a folder named `usmt` inside this repository: `Migratron/usmt/amd64/` (or `arm64/`).
+   - Migratron will automatically find and use the correct native binaries for your machine.
 3. **Custom Config Path**:
    - Alternatively, edit `customPath` in [usmt-config.json](scripts/usmt-config.json) to point to your `scanstate.exe` directory.
 
