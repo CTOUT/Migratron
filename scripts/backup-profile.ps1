@@ -120,6 +120,24 @@ $argList = @(
     "/l:`"$logFile`""
 )
 
+# User scope: controls which profiles ScanState captures.
+# "current" (default) — only the user running this script.
+# "all"               — every profile on the machine.
+$userScope = if (-not [string]::IsNullOrEmpty($config.usmt.userScope)) { $config.usmt.userScope } else { 'current' }
+
+if ($userScope -eq 'all') {
+    Log "User Scope  : All users on this machine" 'WARN'
+    Log "             (Set usmt.userScope to 'current' in usmt-config.local.json to limit to the running user.)" 'WARN'
+}
+else {
+    # current: exclude everyone, then re-include only the running account
+    $domain   = $env:USERDOMAIN
+    $username = $env:USERNAME
+    $argList += "/ue:*\*"
+    $argList += "/ui:$domain\$username"
+    Log "User Scope  : Current user only ($domain\$username)" 'INFO'
+}
+
 # Append any custom arguments from config
 # --- FIX #3: restrict additionalArgs to a strict allowlist of safe USMT flags ---
 $allowedArgPatterns = @(

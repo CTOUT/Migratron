@@ -19,6 +19,11 @@
           "type": "ARRAY",
           "items": { "type": "STRING" },
           "description": "Additional command line arguments passed directly to USMT"
+        },
+        "userScope": {
+          "type": "STRING",
+          "enum": ["current", "all"],
+          "description": "Controls which user profiles ScanState captures. 'current' (default) captures only the user running the backup; 'all' captures every profile on the machine."
         }
       },
       "required": ["customPath", "xmlFiles", "additionalArgs"]

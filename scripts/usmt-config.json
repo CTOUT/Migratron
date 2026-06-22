@@ -2,6 +2,7 @@
   "$schema": "../schemas/usmt-config-schema.json",
   "usmt": {
     "customPath": "",
+    "userScope": "current",
     "xmlFiles": [
       "MigApp.xml",
       "MigUser.xml",

@@ -17,7 +17,16 @@ $usmtPath = Find-UsmtPath
 if ($null -ne $usmtPath) {
     Log "USMT Status: FOUND" 'SUCCESS'
     Log "USMT Path  : $usmtPath" 'INFO'
-    
+
+    # Show the effective user scope
+    $userScope = if (-not [string]::IsNullOrEmpty($config.usmt.userScope)) { $config.usmt.userScope } else { 'current' }
+    if ($userScope -eq 'all') {
+        Log "User Scope : All users on this machine (usmt.userScope = 'all')" 'WARN'
+    }
+    else {
+        Log "User Scope : Current user only — $env:USERDOMAIN\$env:USERNAME (usmt.userScope = 'current')" 'INFO'
+    }
+
     # Check for requested XML files
     foreach ($xml in $config.usmt.xmlFiles) {
         $localXmlPath = Join-Path $PSScriptRoot $xml
