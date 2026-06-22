@@ -21,3 +21,5 @@ Tracked work items for Migratron. Items are moved from here to `CHANGELOG.md` wh
 - [ ] **Smart Service Layer (Windows Service)** — Create a lightweight background service wrapping the toolkit to monitor idle times, shutdown/logoff hooks, and orchestrate point-in-time snapshots intelligently.
 - [ ] **USMT Custom XML Generator** — Create a utility to customize the rules inside the USMT XML files (excluding/including specific files, directories, or registry subkeys easily).
 - [ ] **Secure Archive Encryption** — Add password protection/encryption support to the final ZIP archive to safeguard credentials and private keys.
+- [ ] **GitHub Actions Release Workflow** — Automates building the toolkit, creating a ZIP release archive, and attaching it to a new GitHub release with release notes.
+- [ ] **Automatic Version Bump** — Script `update-version.ps1` updates `migratron.ps1` and `CHANGELOG.md` with the next semantic version before publishing. Bump script must be updated manually to update the next version number (but can be used to update existing release tags).

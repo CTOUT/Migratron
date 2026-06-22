@@ -83,7 +83,7 @@ if ($hasSwitch) {
     
     if ($Backup) {
         # Check and elevate to admin
-        Assert-AdminPrivileges
+        Assert-AdminPrivileges -CallerBoundParameters $PSBoundParameters
         
         $params = @{}
         if ($DryRun) { $params["DryRun"] = $true }
@@ -96,7 +96,7 @@ if ($hasSwitch) {
             return
         }
         # Check and elevate to admin
-        Assert-AdminPrivileges
+        Assert-AdminPrivileges -CallerBoundParameters $PSBoundParameters
         
         $params = @{ BackupPath = $BackupPath }
         if ($Interactive) { $params["Interactive"] = $true }
@@ -106,12 +106,12 @@ if ($hasSwitch) {
     }
     
     if ($RegisterTask) {
-        Assert-AdminPrivileges
+        Assert-AdminPrivileges -CallerBoundParameters $PSBoundParameters
         & (Join-Path $ScriptDir "schedule-task.ps1") -Register -TriggerType $TriggerType -Time $Time
     }
     
     if ($UnregisterTask) {
-        Assert-AdminPrivileges
+        Assert-AdminPrivileges -CallerBoundParameters $PSBoundParameters
         & (Join-Path $ScriptDir "schedule-task.ps1") -Unregister
     }
 }
@@ -142,7 +142,7 @@ else {
             "2" {
                 Write-Host ""
                 # This will prompt UAC and run in an elevated window if not already admin
-                Assert-AdminPrivileges
+                Assert-AdminPrivileges -CallerBoundParameters $PSBoundParameters
                 
                 $dry = Read-Host "Dry run (simulate backup)? [y/N]"
                 $drySwitch = if ($dry -like "y*") { $true } else { $false }
@@ -155,10 +155,10 @@ else {
             }
             "3" {
                 Write-Host ""
-                Assert-AdminPrivileges
+                Assert-AdminPrivileges -CallerBoundParameters $PSBoundParameters
                 
                 $path = Read-Host "Enter path to the backup ZIP file"
-                $path = $path.Trim("'",'"')
+                $path = $path.Trim("'", '"')
                 
                 if ([string]::IsNullOrEmpty($path) -or -not (Test-Path $path)) {
                     Log "Backup file not found at: '$path'" 'ERROR'
@@ -181,7 +181,7 @@ else {
             }
             "4" {
                 Write-Host ""
-                Assert-AdminPrivileges
+                Assert-AdminPrivileges -CallerBoundParameters $PSBoundParameters
                 
                 Write-Host "Manage Scheduled Task:" -ForegroundColor Magenta
                 Write-Host "  [1] Register Daily Backup Task"
@@ -191,13 +191,21 @@ else {
                 
                 switch ($taskChoice) {
                     "1" {
+                        # --- FIX #2: validate user input before forwarding ---
                         $timeVal = Read-Host "Enter daily backup time (e.g. 22:00)"
+                        if ([string]::IsNullOrEmpty($timeVal) -or $timeVal -notmatch '^\d{2}:\d{2}$') {
+                            Log "Invalid time format. Using default 22:00." 'WARN'
+                            $timeVal = '22:00'
+                        }
+
                         $trigger = Read-Host "Select trigger type (Daily / AtLogon / OnIdle)"
-                        
-                        $params = @{ Register = $true }
-                        if (![string]::IsNullOrEmpty($timeVal)) { $params["Time"] = $timeVal }
-                        if (![string]::IsNullOrEmpty($trigger)) { $params["TriggerType"] = $trigger }
-                        
+                        $allowedTriggers = @('Daily', 'AtLogon', 'OnIdle')
+                        if ($allowedTriggers -notcontains $trigger) {
+                            Log "Invalid trigger type '$trigger'. Using default 'Daily'." 'WARN'
+                            $trigger = 'Daily'
+                        }
+
+                        $params = @{ Register = $true; Time = $timeVal; TriggerType = $trigger }
                         & (Join-Path $ScriptDir "schedule-task.ps1") @params
                     }
                     "2" {

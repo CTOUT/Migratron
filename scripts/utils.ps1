@@ -13,11 +13,11 @@ function Log {
     )
     $ts = (Get-Date).ToString('yyyy-MM-dd HH:mm:ss')
     $color = switch ($Level) {
-        'ERROR'   { 'Red' }
-        'WARN'    { 'Yellow' }
+        'ERROR' { 'Red' }
+        'WARN' { 'Yellow' }
         'SUCCESS' { 'Green' }
-        'DEBUG'   { 'DarkGray' }
-        default   { 'Cyan' }
+        'DEBUG' { 'DarkGray' }
+        default { 'Cyan' }
     }
     Write-Host "[$ts][$Level] $Message" -ForegroundColor $color
 }
@@ -75,11 +75,13 @@ function Get-UsmtConfig {
                 foreach ($section in $localJson.psobject.Properties.Name) {
                     if ($null -eq $json.$section) {
                         $json | Add-Member -MemberType NoteProperty -Name $section -Value $localJson.$section
-                    } else {
+                    }
+                    else {
                         foreach ($prop in $localJson.$section.psobject.Properties.Name) {
                             if ($null -eq $json.$section.$prop) {
                                 $json.$section | Add-Member -MemberType NoteProperty -Name $prop -Value $localJson.$section.$prop
-                            } else {
+                            }
+                            else {
                                 $json.$section.$prop = $localJson.$section.$prop
                             }
                         }
@@ -88,7 +90,8 @@ function Get-UsmtConfig {
             }
         }
         return $json
-    } catch {
+    }
+    catch {
         throw "Failed to parse JSON config: $_"
     }
 }
@@ -102,30 +105,52 @@ function Test-IsAdmin {
 }
 
 function Assert-AdminPrivileges {
+    # Accept the caller's bound parameters so they can be safely forwarded on elevation.
+    # Using a parameter avoids relying on $MyInvocation inside a dot-sourced module,
+    # which would reflect the module's own (empty) parameter set instead of the caller's.
+    param(
+        [hashtable]$CallerBoundParameters = @{}
+    )
+
     if (-not (Test-IsAdmin)) {
         Log "Migratron requires Administrator privileges to run USMT." 'WARN'
         Log "Please restart your PowerShell session as Administrator, or allow UAC elevation." 'INFO'
-        
-        # Self-elevate
+
+        # Resolve the script to re-launch (always the top-level migratron.ps1)
         $myPath = $MyInvocation.ScriptName
         if ([string]::IsNullOrEmpty($myPath)) {
             $myPath = Join-Path $PSScriptRoot "..\migratron.ps1"
         }
-        
-        # Capture arguments
-        $argsList = @()
-        foreach ($key in $MyInvocation.BoundParameters.Keys) {
-            $val = $MyInvocation.BoundParameters[$key]
+        $myPath = [System.IO.Path]::GetFullPath($myPath)
+
+        # Build an argument array from the caller's bound parameters.
+        # Each value is safely escaped to prevent metacharacter injection.
+        $argsList = [System.Collections.Generic.List[string]]::new()
+        foreach ($key in $CallerBoundParameters.Keys) {
+            $val = $CallerBoundParameters[$key]
             if ($val -is [switch]) {
-                if ($val) { $argsList += "-$key" }
-            } else {
-                $argsList += "-$key `"$val`""
+                if ($val.IsPresent) { $argsList.Add("-$key") }
+            }
+            else {
+                # Escape single-quotes inside the value, then wrap in single quotes
+                $escaped = ($val -as [string]) -replace "'", "''"
+                $argsList.Add("-$key")
+                $argsList.Add("'$escaped'")
             }
         }
-        $argsString = $argsList -join ' '
-        
+
+        # Build the full ArgumentList array for Start-Process:
+        # Each element is a separate token — no string-interpolation injection risk.
+        $elevateArgs = [System.Collections.Generic.List[string]]::new()
+        $elevateArgs.Add('-NoProfile')
+        $elevateArgs.Add('-ExecutionPolicy')
+        $elevateArgs.Add('RemoteSigned')   # #7: RemoteSigned instead of Bypass
+        $elevateArgs.Add('-File')
+        $elevateArgs.Add($myPath)
+        foreach ($a in $argsList) { $elevateArgs.Add($a) }
+
         Log "Elevating process..." 'INFO'
-        Start-Process powershell.exe -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$myPath`" $argsString" -Verb RunAs
+        Start-Process powershell.exe -ArgumentList $elevateArgs -Verb RunAs
         exit
     }
 }
@@ -140,7 +165,8 @@ function Find-UsmtPath {
                 return $customPath
             }
         }
-    } catch {}
+    }
+    catch {}
     
     # 2. Check local repo folders (helps users run self-contained USMT)
     $localPaths = @(
@@ -180,11 +206,14 @@ function Get-FormatSize {
     param([long]$Bytes)
     if ($Bytes -ge 1GB) {
         return "$([Math]::Round($Bytes / 1GB, 2)) GB"
-    } elseif ($Bytes -ge 1MB) {
+    }
+    elseif ($Bytes -ge 1MB) {
         return "$([Math]::Round($Bytes / 1MB, 2)) MB"
-    } elseif ($Bytes -ge 1KB) {
+    }
+    elseif ($Bytes -ge 1KB) {
         return "$([Math]::Round($Bytes / 1KB, 2)) KB"
-    } else {
+    }
+    else {
         return "$Bytes Bytes"
     }
 }

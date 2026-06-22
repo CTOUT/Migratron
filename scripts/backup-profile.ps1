@@ -21,6 +21,12 @@ if ($null -eq $usmtPath) {
     return
 }
 
+# --- FIX #6: Warn when encryption is disabled ---
+if (-not $config.backup.encrypt) {
+    Log "WARNING: Backup encryption is disabled ('encrypt: false' in config). USMT stores contain sensitive user data." 'WARN'
+    Log "         Consider enabling encryption or storing backups on encrypted drives (e.g. BitLocker)." 'WARN'
+}
+
 $outputDirResolved = Resolve-PathVariables -Path $config.backup.outputDir
 $timestamp = (Get-Date).ToString("yyyyMMdd-HHmmss")
 
@@ -30,10 +36,9 @@ if (-not $DryRun -and -not (Test-Path $outputDirResolved)) {
     Log "Created backup output directory: $outputDirResolved"
 }
 
-# Create staging directory in workspace (USMT needs a folder to write USMT.MIG into)
-$workspaceRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot ".."))
-$StagingStore = Join-Path $workspaceRoot ".migratron-temp-store-$timestamp"
-$logFile = Join-Path $workspaceRoot "scanstate-$timestamp.log"
+# --- FIX #8: Use $env:TEMP for staging so orphaned data does not remain in the repo ---
+$StagingStore = Join-Path $env:TEMP "migratron-temp-store-$timestamp"
+$logFile      = Join-Path $env:TEMP "scanstate-$timestamp.log"
 
 Log "USMT Binaries : $usmtPath" 'INFO'
 Log "Staging Folder: $StagingStore" 'DEBUG'
@@ -66,10 +71,13 @@ if ($config.backup.excludePaths -and $config.backup.excludePaths.Count -gt 0) {
         }
         if ($cleanPath.EndsWith('\')) {
             $patternPath = "${cleanPath}* [*]"
-        } else {
+        }
+        else {
             $patternPath = "${cleanPath}\* [*]"
         }
-        $xmlLines += "            <pattern type=`"File`">$patternPath</pattern>"
+        # --- FIX #4: XML-encode the path before embedding to prevent XML injection ---
+        $safePatternPath = [System.Security.SecurityElement]::Escape($patternPath)
+        $xmlLines += "            <pattern type=`"File`">$safePatternPath</pattern>"
     }
     $xmlLines += @(
         '          </objectSet>',
@@ -88,7 +96,8 @@ foreach ($xml in $config.usmt.xmlFiles) {
     $localXmlPath = Join-Path $PSScriptRoot $xml
     if (Test-Path $localXmlPath) {
         $xmlArgs += "/i:`"$localXmlPath`""
-    } else {
+    }
+    else {
         $xmlArgs += "/i:`"$usmtPath\$xml`""
     }
 }
@@ -112,9 +121,30 @@ $argList = @(
 )
 
 # Append any custom arguments from config
+# --- FIX #3: restrict additionalArgs to a strict allowlist of safe USMT flags ---
+$allowedArgPatterns = @(
+    '^/c$',
+    '^/nocompress$',
+    '^/hardlink$',
+    '^/v:\d+$',
+    '^/efs:(skip|copyraw|abort|hardlink)$',
+    '^/listfiles:.+$',
+    '^/offlineWinDir:.+$',
+    '^/offlineWinOld:.+$'
+)
 if ($config.usmt.additionalArgs -and $config.usmt.additionalArgs.Count -gt 0) {
     foreach ($arg in $config.usmt.additionalArgs) {
-        $argList += Resolve-PathVariables -Path $arg
+        $resolvedArg = Resolve-PathVariables -Path $arg
+        $matched = $false
+        foreach ($pattern in $allowedArgPatterns) {
+            if ($resolvedArg -match $pattern) { $matched = $true; break }
+        }
+        if ($matched) {
+            $argList += $resolvedArg
+        }
+        else {
+            Log "Skipping disallowed additionalArg: '$resolvedArg'" 'WARN'
+        }
     }
 }
 
@@ -134,12 +164,12 @@ if (-not (Test-Path $StagingStore)) {
 Log "Running USMT ScanState snapshot. This may take a few minutes..." 'INFO'
 
 $processParams = @{
-    FilePath               = $scanStateExe
-    ArgumentList           = $argListString
-    Wait                   = $true
-    NoNewWindow            = $true
-    PassThru               = $true
-    ErrorAction            = 'Continue'
+    FilePath     = $scanStateExe
+    ArgumentList = $argListString
+    Wait         = $true
+    NoNewWindow  = $true
+    PassThru     = $true
+    ErrorAction  = 'Continue'
 }
 
 try {
@@ -185,10 +215,12 @@ try {
                 Log "Archive created successfully!" 'SUCCESS'
                 Log "Final path: $zipFilePath" 'SUCCESS'
                 Log "Archive size: $(Get-FormatSize -Bytes $bytes)" 'INFO'
-            } else {
+            }
+            else {
                 Log "Failed to create compressed ZIP archive." 'ERROR'
             }
-        } else {
+        }
+        else {
             # Move uncompressed staging folder directly to output dir
             $destFolder = Join-Path $outputDirResolved "migratron-store-$timestamp"
             Log "Moving uncompressed store to: $destFolder"
@@ -210,7 +242,8 @@ try {
                 }
             }
         }
-    } else {
+    }
+    else {
         Log "ScanState failed with exit code: $exitCode." 'ERROR'
         Log "Please check the log file at: $logFile" 'ERROR'
     }

@@ -32,7 +32,7 @@ You can expect:
 This repository contains:
 
 - A PowerShell toolkit (`migratron.ps1`, `scripts/`)
-- Declarative backup manifests (`scripts/config-manifest.json`)
+- Declarative configuration (`scripts/usmt-config.json`, `scripts/usmt-config.local.json`)
 - GitHub Actions release workflows
 - Documentation
 
@@ -46,11 +46,14 @@ Vulnerabilities in any of these are in scope. Areas of particular interest:
 ## Key Security Practices for Users
 
 ### Backup Archive Security
+
 Migratron backups contain highly sensitive data, including Git credentials, SSH configuration, shell profiles, and environment variables.
+
 - **Never** upload Migratron backup ZIP archives to public repositories or shared cloud storage without password protection or encryption.
 - Store backups in secure, encrypted storage (e.g., BitLocker-encrypted drives or secure personal cloud vaults).
 
 ### Sensitive Keys Warn-and-Skip
+
 By default, Migratron scans for private SSH and GPG keys and alerts you if they are present. You can choose to exclude them or back them up only after acknowledging the warning.
 
 ## GitHub Actions

@@ -35,9 +35,9 @@ if ($null -eq $usmtPath) {
 }
 
 $timestamp = (Get-Date).ToString("yyyyMMdd-HHmmss")
-$workspaceRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot ".."))
-$StagingDir = Join-Path $workspaceRoot ".migratron-temp-restore-$timestamp"
-$logFile = Join-Path $workspaceRoot "loadstate-$timestamp.log"
+# --- FIX #8: Use $env:TEMP for staging so orphaned data does not remain in the repo ---
+$StagingDir = Join-Path $env:TEMP "migratron-temp-restore-$timestamp"
+$logFile    = Join-Path $env:TEMP "loadstate-$timestamp.log"
 
 Log "USMT Binaries : $usmtPath" 'INFO'
 Log "LoadState Log : $logFile" 'INFO'
@@ -61,8 +61,24 @@ if ($isZip) {
     if (-not $DryRun) {
         New-Item -ItemType Directory -Path $StagingDir -Force | Out-Null
         Expand-Archive -Path $BackupPath -DestinationPath $StagingDir -Force
+
+        # --- FIX #5: Zip Slip protection ---
+        # Verify every extracted path is contained within $StagingDir to prevent
+        # directory traversal attacks via crafted ZIP archives.
+        $canonicalStaging = [System.IO.Path]::GetFullPath($StagingDir).TrimEnd('\') + '\'
+        $extractedItems = Get-ChildItem -Path $StagingDir -Recurse -Force
+        foreach ($item in $extractedItems) {
+            $canonicalItem = [System.IO.Path]::GetFullPath($item.FullName)
+            if (-not $canonicalItem.StartsWith($canonicalStaging, [System.StringComparison]::OrdinalIgnoreCase)) {
+                Log "Directory traversal detected in ZIP archive! Aborting restore. Offending entry: $($item.FullName)" 'ERROR'
+                Remove-Item -Path $StagingDir -Recurse -Force -ErrorAction SilentlyContinue
+                return
+            }
+        }
+        Log "ZIP archive passed directory traversal check." 'DEBUG'
     }
-} else {
+}
+else {
     $storeFolder = $BackupPath
     Log "Restoring directly from directory: $storeFolder" 'DEBUG'
 }
@@ -84,7 +100,8 @@ foreach ($xml in $config.usmt.xmlFiles) {
     $localXmlPath = Join-Path $PSScriptRoot $xml
     if (Test-Path $localXmlPath) {
         $xmlArgs += "/i:`"$localXmlPath`""
-    } else {
+    }
+    else {
         $xmlArgs += "/i:`"$usmtPath\$xml`""
     }
 }
@@ -100,9 +117,29 @@ $argList = @(
 )
 
 # Append any custom arguments from config
+# --- FIX #3: restrict additionalArgs to a strict allowlist of safe USMT flags ---
+$allowedArgPatterns = @(
+    '^/c$',
+    '^/nocompress$',
+    '^/v:\d+$',
+    '^/efs:(skip|copyraw|abort|hardlink)$',
+    '^/listfiles:.+$',
+    '^/offlineWinDir:.+$',
+    '^/offlineWinOld:.+$'
+)
 if ($config.usmt.additionalArgs -and $config.usmt.additionalArgs.Count -gt 0) {
     foreach ($arg in $config.usmt.additionalArgs) {
-        $argList += Resolve-PathVariables -Path $arg
+        $resolvedArg = Resolve-PathVariables -Path $arg
+        $matched = $false
+        foreach ($pattern in $allowedArgPatterns) {
+            if ($resolvedArg -match $pattern) { $matched = $true; break }
+        }
+        if ($matched) {
+            $argList += $resolvedArg
+        }
+        else {
+            Log "Skipping disallowed additionalArg: '$resolvedArg'" 'WARN'
+        }
     }
 }
 
@@ -119,12 +156,12 @@ if ($DryRun) {
 Log "Running USMT LoadState restore. This may take a few minutes..." 'INFO'
 
 $processParams = @{
-    FilePath               = $loadStateExe
-    ArgumentList           = $argListString
-    Wait                   = $true
-    NoNewWindow            = $true
-    PassThru               = $true
-    ErrorAction            = 'Continue'
+    FilePath     = $loadStateExe
+    ArgumentList = $argListString
+    Wait         = $true
+    NoNewWindow  = $true
+    PassThru     = $true
+    ErrorAction  = 'Continue'
 }
 
 try {
@@ -138,7 +175,8 @@ try {
     if ($exitCode -eq 0 -or $exitCode -eq 1) {
         Log "LoadState restore completed successfully (Exit Code: $exitCode)." 'SUCCESS'
         Log "Your local application settings and user states have been restored." 'SUCCESS'
-    } else {
+    }
+    else {
         Log "LoadState failed with exit code: $exitCode." 'ERROR'
         Log "Please check the log file at: $logFile" 'ERROR'
     }

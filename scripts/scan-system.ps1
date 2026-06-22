@@ -23,13 +23,16 @@ if ($null -ne $usmtPath) {
         $localXmlPath = Join-Path $PSScriptRoot $xml
         if (Test-Path $localXmlPath) {
             Log "  [✓] XML Rule: $xml (Found locally in repo)" 'SUCCESS'
-        } elseif (Test-Path (Join-Path $usmtPath $xml)) {
+        }
+        elseif (Test-Path (Join-Path $usmtPath $xml)) {
             Log "  [✓] XML Rule: $xml (Found in USMT directory)" 'SUCCESS'
-        } else {
+        }
+        else {
             Log "  [X] XML Rule: $xml (MISSING! Not found locally or in USMT directory)" 'ERROR'
         }
     }
-} else {
+}
+else {
     Log "USMT Status: NOT FOUND" 'ERROR'
     Log "USMT is required for Migratron snapshots." 'WARN'
     Write-Host ""
@@ -53,7 +56,8 @@ if ([string]::IsNullOrEmpty($oneDrivePath)) {
 if (-not [string]::IsNullOrEmpty($oneDrivePath) -and (Test-Path $oneDrivePath)) {
     Log "OneDrive Status: ACTIVE" 'SUCCESS'
     Log "OneDrive Path  : $oneDrivePath" 'INFO'
-} else {
+}
+else {
     Log "OneDrive Status: NOT DETECTED (or not signed in)" 'WARN'
     Log "Backups will be saved locally, but will not sync automatically to the cloud." 'WARN'
 }
@@ -68,10 +72,12 @@ if (Test-Path $outputDirResolved) {
             $size = Get-FormatSize -Bytes $b.Length
             Log "  - $($b.Name) (Size: $size, Modified: $($b.LastWriteTime))" 'INFO'
         }
-    } else {
+    }
+    else {
         Log "No previous snapshots found in the output directory." 'INFO'
     }
-} else {
+}
+else {
     Log "Output directory does not exist yet (it will be created during the first backup)." 'INFO'
 }
 

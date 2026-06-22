@@ -6,7 +6,10 @@
     "usmt": {
       "type": "OBJECT",
       "properties": {
-        "customPath": { "type": "STRING", "description": "Custom path to USMT amd64 folder if not standard ADK installation" },
+        "customPath": {
+          "type": "STRING",
+          "description": "Custom path to USMT amd64 folder if not standard ADK installation"
+        },
         "xmlFiles": {
           "type": "ARRAY",
           "items": { "type": "STRING" },
@@ -23,10 +26,22 @@
     "backup": {
       "type": "OBJECT",
       "properties": {
-        "outputDir": { "type": "STRING", "description": "Target folder for backup archives (supports environment variables)" },
-        "retentionCount": { "type": "INTEGER", "description": "Number of backup zip files to keep" },
-        "compress": { "type": "BOOLEAN", "description": "Compress backup store into ZIP archive" },
-        "encrypt": { "type": "BOOLEAN", "description": "Enable encryption for backup archives (planned)" },
+        "outputDir": {
+          "type": "STRING",
+          "description": "Target folder for backup archives (supports environment variables)"
+        },
+        "retentionCount": {
+          "type": "INTEGER",
+          "description": "Number of backup zip files to keep"
+        },
+        "compress": {
+          "type": "BOOLEAN",
+          "description": "Compress backup store into ZIP archive"
+        },
+        "encrypt": {
+          "type": "BOOLEAN",
+          "description": "Enable encryption for backup archives (planned)"
+        },
         "excludePaths": {
           "type": "ARRAY",
           "items": { "type": "STRING" },
@@ -38,9 +53,19 @@
     "schedule": {
       "type": "OBJECT",
       "properties": {
-        "taskName": { "type": "STRING", "description": "Name of the Windows Scheduled Task" },
-        "trigger": { "type": "STRING", "enum": ["Daily", "AtLogon", "OnIdle"], "description": "Task scheduler trigger" },
-        "time": { "type": "STRING", "description": "Trigger time for Daily task (HH:mm format)" }
+        "taskName": {
+          "type": "STRING",
+          "description": "Name of the Windows Scheduled Task"
+        },
+        "trigger": {
+          "type": "STRING",
+          "enum": ["Daily", "AtLogon", "OnIdle"],
+          "description": "Task scheduler trigger"
+        },
+        "time": {
+          "type": "STRING",
+          "description": "Trigger time for Daily task (HH:mm format)"
+        }
       },
       "required": ["taskName", "trigger", "time"]
     }

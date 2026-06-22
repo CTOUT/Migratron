@@ -27,7 +27,8 @@ if ($Unregister) {
     if (Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue) {
         Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false
         Log "Successfully removed scheduled task: $TaskName" 'SUCCESS'
-    } else {
+    }
+    else {
         Log "Scheduled task '$TaskName' does not exist." 'WARN'
     }
     return
@@ -38,7 +39,7 @@ if ($Register) {
     
     # 1. Define the action to run PowerShell script
     $scriptPath = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot "..\migratron.ps1"))
-    $arguments = "-NoProfile -ExecutionPolicy Bypass -File `"$scriptPath`" -Backup -SkipSensitive"
+    $arguments = "-NoProfile -ExecutionPolicy RemoteSigned -File `"$scriptPath`" -Backup -SkipSensitive"
     
     $action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument $arguments
     
@@ -96,6 +97,7 @@ if ($Register) {
     catch {
         Log "Failed to register scheduled task: $_" 'ERROR'
     }
-} else {
+}
+else {
     Log "Please specify either -Register or -Unregister." 'WARN'
 }
