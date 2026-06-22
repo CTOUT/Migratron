@@ -103,6 +103,21 @@ Launch the toolkit without parameters to access the dashboard. If you pick an op
 .\migratron.ps1 -Restore -BackupPath "E:\Backups\migratron-store-20260101-120000.zip" -DryRun
 ```
 
+#### Extracting Files Manually (Without ADK Installation)
+
+Every successful backup automatically syncs a copy of the USMT binaries to `USMT-Binaries/` inside your backup output folder. You do **not** need to install the full Windows ADK on a new PC to extract files. 
+
+You can use the included `usmtutils.exe` to manually extract files directly from a backup store without performing a full system restore:
+
+```powershell
+# Extract everything from a store to a local folder
+.\USMT-Binaries\usmtutils.exe /extract "E:\Backups\migratron-store-20260101-120000\USMT\USMT.MIG" "C:\ExtractedStore"
+
+# Extract only specific files using pattern matching (e.g., config files)
+.\USMT-Binaries\usmtutils.exe /extract "E:\Backups\migratron-store-20260101-120000\USMT\USMT.MIG" "C:\ExtractedStore" /i:"*.json"
+```
+
+
 #### Configure Automated Snapshots:
 
 ```powershell

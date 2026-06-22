@@ -261,6 +261,15 @@ try {
             Move-Item -Path $StagingStore -Destination $destFolder -Force
         }
         
+        # Sync USMT binaries to the backup output directory
+        $binariesDest = Join-Path $outputDirResolved "USMT-Binaries"
+        Log "Ensuring USMT binaries are synced to output directory..." 'INFO'
+        if (-not (Test-Path $binariesDest)) {
+            New-Item -ItemType Directory -Path $binariesDest -Force | Out-Null
+        }
+        Copy-Item -Path "$usmtPath\*" -Destination $binariesDest -Recurse -Force | Out-Null
+        Log "USMT Binaries copied to: $binariesDest" 'SUCCESS'
+        
         # Retention management
         Log "Checking backup retention policy..."
         $retentionLimit = $config.backup.retentionCount
