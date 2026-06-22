@@ -272,12 +272,16 @@ try {
         
         # Sync USMT binaries to the backup output directory
         $binariesDest = Join-Path $outputDirResolved "USMT-Binaries"
-        Log "Ensuring USMT binaries are synced to output directory..." 'INFO'
-        if (-not (Test-Path $binariesDest)) {
-            New-Item -ItemType Directory -Path $binariesDest -Force | Out-Null
+        $scanStateDest = Join-Path $binariesDest "scanstate.exe"
+        if (-not (Test-Path $scanStateDest)) {
+            Log "Syncing USMT binaries to output directory..." 'INFO'
+            New-Item -ItemType Directory -Path $binariesDest -Force -ErrorAction SilentlyContinue | Out-Null
+            Copy-Item -Path "$usmtPath\*" -Destination $binariesDest -Recurse -Force | Out-Null
+            Log "USMT Binaries copied to: $binariesDest" 'SUCCESS'
         }
-        Copy-Item -Path "$usmtPath\*" -Destination $binariesDest -Recurse -Force | Out-Null
-        Log "USMT Binaries copied to: $binariesDest" 'SUCCESS'
+        else {
+            Log "USMT Binaries already exist in output directory. Skipping copy." 'DEBUG'
+        }
         
         # Retention management
         Log "Checking backup retention policy..."
