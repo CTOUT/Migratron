@@ -12,11 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **CSpell Configuration (`cspell.json`)** — Added spell-check configuration targeting en-GB with a full custom word list covering USMT terminology, PowerShell API names, and Migratron-specific identifiers.
+- **Secondary Drive Audit (`scripts/scan-system.ps1`)** — Scan now enumerates all fixed local drives except the system drive (`C:`) and warns about any drive not covered by `excludePaths`. Helps users of any machine configuration identify drives that USMT may scan unexpectedly (e.g. secondary data drives, cloud sync caches, game libraries), with an actionable message directing them to add the drive to `usmt-config.local.json`.
 
 ### Changed
 
 - **PowerShell 7 Compatibility (`scripts/utils.ps1`, `scripts/schedule-task.ps1`)** — Self-elevation and scheduled task registration now detect the current PowerShell host at runtime (`pwsh.exe` for PS 7+, `powershell.exe` for Windows PowerShell 5.1), ensuring elevated sessions and scheduled tasks always run in the same shell they were launched from.
-
 - **Security Hardening (`scripts/utils.ps1`)** — `Assert-AdminPrivileges` now accepts caller-supplied bound parameters and builds the UAC elevation `ArgumentList` as a typed string array with single-quote-escaped values, preventing shell metacharacter injection during self-elevation.
 - **Security Hardening (`migratron.ps1`)** — All `Assert-AdminPrivileges` calls now forward `$PSBoundParameters`. Interactive scheduled-task input validated against an allowlist (`Daily`, `AtLogon`, `OnIdle`) and HH:mm regex before being passed to child scripts.
 - **Security Hardening (`scripts/backup-profile.ps1`)** — `additionalArgs` from config filtered through a strict USMT flag allowlist. `excludePaths` values XML-encoded via `SecurityElement::Escape()` before embedding in generated XML. Runtime warning added when `encrypt: false`. Staging and log paths moved from repo root to `$env:TEMP`.

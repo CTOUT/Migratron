@@ -81,6 +81,48 @@ else {
     Log "Output directory does not exist yet (it will be created during the first backup)." 'INFO'
 }
 
+# 5. Secondary Drive Audit
+# Enumerate all fixed local drives except C: and warn about any not covered by excludePaths.
+# USMT scans the entire user profile by default, which can include shell library paths,
+# folder redirections, and recently-accessed locations pointing to secondary drives.
+Step "Secondary Drive Audit"
+
+$systemDrive = $env:SystemDrive.TrimEnd('\').ToUpper()   # typically "C:"
+
+# Resolve configured excludePaths to their drive letters for comparison
+$excludedDrives = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+if ($config.backup.excludePaths -and $config.backup.excludePaths.Count -gt 0) {
+    foreach ($p in $config.backup.excludePaths) {
+        $resolved = Resolve-PathVariables -Path $p
+        $root = [System.IO.Path]::GetPathRoot($resolved)   # e.g. "D:\"
+        if (-not [string]::IsNullOrEmpty($root)) {
+            $excludedDrives.Add($root.TrimEnd('\').ToUpper()) | Out-Null
+        }
+    }
+}
+
+# Get all fixed (non-removable) drives present on this machine
+$fixedDrives = Get-PSDrive -PSProvider FileSystem | Where-Object {
+    $_.Root -match '^[A-Z]:\\$' -and
+    $_.Root.TrimEnd('\').ToUpper() -ne $systemDrive
+} | Sort-Object Root
+
+if ($fixedDrives.Count -eq 0) {
+    Log "No secondary drives detected." 'INFO'
+}
+else {
+    foreach ($drive in $fixedDrives) {
+        $letter = $drive.Root.TrimEnd('\').ToUpper()   # e.g. "D:"
+        if ($excludedDrives.Contains($letter)) {
+            Log "  [✓] $($drive.Root) — excluded via excludePaths" 'SUCCESS'
+        }
+        else {
+            Log "  [!] $($drive.Root) — NOT in excludePaths. USMT may scan this drive." 'WARN'
+            Log "      Add `"$($drive.Root.TrimEnd('\'))\\`" to excludePaths in usmt-config.local.json if you do not want it backed up." 'WARN'
+        }
+    }
+}
+
 Write-Host ""
 $adminStatus = "Standard User (Not Elevated)"
 $adminLevel = 'WARN'
