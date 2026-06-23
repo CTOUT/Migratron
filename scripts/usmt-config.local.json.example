@@ -27,7 +27,13 @@
     "compress": false,
     "generateManifest": true,
     "excludePaths": [
-      "%USERPROFILE%\\OneDrive",
+      "%OneDrive%",
+      "%OneDriveConsumer%",
+      "%OneDriveCommercial%",
+      "%USERPROFILE%\\Dropbox",
+      "%USERPROFILE%\\Google Drive",
+      "%USERPROFILE%\\Box",
+      "%USERPROFILE%\\Box Sync",
       "D:\\",
       "E:\\UnwantedFolder"
     ],
