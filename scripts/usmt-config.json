@@ -12,6 +12,7 @@
     "retentionCount": 5,
     "compress": false,
     "encrypt": false,
+    "generateManifest": true,
     "excludePaths": []
   },
   "schedule": {

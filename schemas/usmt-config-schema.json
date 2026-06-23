@@ -52,6 +52,10 @@
           "type": "BOOLEAN",
           "description": "Enable encryption for backup archives (planned)"
         },
+        "generateManifest": {
+          "type": "BOOLEAN",
+          "description": "If true, USMT will automatically generate a plain-text manifest file containing a list of all gathered files."
+        },
         "excludePaths": {
           "type": "ARRAY",
           "items": { "type": "STRING" },

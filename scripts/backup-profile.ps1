@@ -120,6 +120,12 @@ $argList = @(
     "/l:`"$logFile`""
 )
 
+if ($null -ne $config.backup.generateManifest -and $config.backup.generateManifest) {
+    $manifestPath = Join-Path $StagingStore "manifest.txt"
+    $argList += "/listfiles:`"$manifestPath`""
+    Log "Manifest generation enabled (manifest.txt)" 'INFO'
+}
+
 # ── User scope resolution ────────────────────────────────────────────────────
 # Priority: users[] (named list) > userScope > default "current"
 #
