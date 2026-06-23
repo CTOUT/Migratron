@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+---
+
+## [v1.0.0] — 2026-06-23
+
+### Added
+- Standardized repository configurations (.editorconfig, Prettier)
+- Automated CSpell dictionaries and validation workflows
+- Automated GitHub Release workflows
+
 ### Added
 
 - **CSpell Configuration (`cspell.json`)** — Added spell-check configuration targeting en-GB with a full custom word list covering USMT terminology, PowerShell API names, and Migratron-specific identifiers.
