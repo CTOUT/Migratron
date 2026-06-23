@@ -121,9 +121,13 @@ $argList = @(
 )
 
 if ($null -ne $config.backup.generateManifest -and $config.backup.generateManifest) {
-    $manifestPath = Join-Path $StagingStore "manifest.txt"
+    if ($config.backup.compress) {
+        $manifestPath = Join-Path $outputDirResolved "manifest-$timestamp.txt"
+    } else {
+        $manifestPath = Join-Path $StagingStore "manifest.txt"
+    }
     $argList += "/listfiles:`"$manifestPath`""
-    Log "Manifest generation enabled (manifest.txt)" 'INFO'
+    Log "Manifest generation enabled ($manifestPath)" 'INFO'
 }
 
 # ── User scope resolution ────────────────────────────────────────────────────
@@ -250,6 +254,23 @@ try {
         $localConfigPath = Join-Path (Split-Path $ConfigPath) "usmt-config.local.json"
         if (Test-Path $localConfigPath) {
             Copy-Item -Path $localConfigPath -Destination $StagingStore -Force | Out-Null
+        }
+        
+        # Generate Interactive HTML Viewer
+        if ($null -ne $config.backup.generateManifest -and $config.backup.generateManifest -and (Test-Path $manifestPath)) {
+            $viewerScript = Join-Path $PSScriptRoot "generate-viewer.ps1"
+            if (Test-Path $viewerScript) {
+                if ($config.backup.compress) {
+                    $htmlPath = Join-Path $outputDirResolved "manifest-viewer-$timestamp.html"
+                } else {
+                    $htmlPath = Join-Path $StagingStore "manifest-viewer.html"
+                }
+                try {
+                    & $viewerScript -ManifestPath $manifestPath -OutputPath $htmlPath
+                } catch {
+                    Log "Failed to generate HTML viewer: $_" 'WARN'
+                }
+            }
         }
         
         $zipFileName = "migratron-store-$timestamp.zip"
