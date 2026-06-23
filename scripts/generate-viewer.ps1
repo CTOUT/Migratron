@@ -17,13 +17,26 @@ if (-not (Test-Path $ManifestPath)) {
     return
 }
 
-Log "Reading manifest and generating HTML viewer..." 'INFO'
+Log "Reading manifest and querying file sizes..." 'INFO'
 $rawLines = Get-Content $ManifestPath
-# Filter out empty lines and force type to raw string to strip PSObject properties
-$paths = $rawLines | Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | ForEach-Object { [string]$_ }
+$fileData = [System.Collections.Generic.List[object]]::new()
+
+foreach ($line in $rawLines) {
+    if ([string]::IsNullOrWhiteSpace($line)) { continue }
+    $cleanPath = $line -replace '^\\\\\?\\', ''
+    $size = 0
+    try {
+        $fileInfo = [System.IO.FileInfo]::new($cleanPath)
+        if ($fileInfo.Exists) {
+            $size = $fileInfo.Length
+        }
+    } catch {}
+    
+    $fileData.Add(@{ p = $cleanPath; s = $size })
+}
 
 # Convert to JSON array
-$jsonPaths = $paths | ConvertTo-Json -Compress
+$jsonPaths = $fileData | ConvertTo-Json -Compress
 
 $html = @"
 <!DOCTYPE html>
@@ -146,6 +159,15 @@ $html = @"
             border-radius: 12px;
             margin-left: 1rem;
         }
+        .size-badge {
+            color: var(--text-main);
+            font-size: 0.8em;
+            background: rgba(56, 189, 248, 0.2);
+            border: 1px solid rgba(56, 189, 248, 0.4);
+            padding: 0.15rem 0.6rem;
+            border-radius: 12px;
+            margin-left: 0.5rem;
+        }
         .hidden { display: none !important; }
         
         /* Scrollbar */
@@ -180,15 +202,24 @@ $html = @"
     </div>
 
     <script>
-        const paths = $jsonPaths;
+        const items = $jsonPaths;
         
+        function formatBytes(bytes, decimals = 2) {
+            if (!+bytes) return '0 Bytes';
+            const k = 1024;
+            const dm = decimals < 0 ? 0 : decimals;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+        }
+
         // Build Tree
-        const tree = { name: "Root", children: {}, files: 0, isDir: true };
+        const tree = { name: "Root", children: {}, files: 0, size: 0, isDir: true };
         
-        paths.forEach(p => {
-            // Strip long path prefixes and split
-            const cleanPath = p.replace(/^\\\\\?\\/, '');
-            const parts = cleanPath.split('\\').filter(Boolean);
+        items.forEach(item => {
+            const p = item.p;
+            const s = item.s;
+            const parts = p.split('\\').filter(Boolean);
             
             let current = tree;
             for (let i = 0; i < parts.length; i++) {
@@ -200,20 +231,23 @@ $html = @"
                         name: part,
                         children: {},
                         files: 0,
+                        size: 0,
                         isDir: !isLast
                     };
                 }
                 
                 if (isLast) {
                     current.children[part].files++;
+                    current.children[part].size += s;
                 } else {
                     current.files++;
+                    current.size += s;
                 }
                 current = current.children[part];
             }
         });
 
-        document.getElementById('total-count').textContent = paths.length.toLocaleString();
+        document.getElementById('total-count').textContent = items.length.toLocaleString() + ' (' + formatBytes(tree.size) + ')';
 
         function renderNode(node, isRoot = false) {
             const ul = document.createElement('ul');
@@ -266,6 +300,16 @@ $html = @"
                     countSpan.className = 'count';
                     countSpan.textContent = child.files.toLocaleString() + ' files';
                     itemDiv.appendChild(countSpan);
+                    
+                    const sizeSpan = document.createElement('span');
+                    sizeSpan.className = 'size-badge';
+                    sizeSpan.textContent = formatBytes(child.size, 1);
+                    itemDiv.appendChild(sizeSpan);
+                } else if (!child.isDir && child.size > 0) {
+                    const sizeSpan = document.createElement('span');
+                    sizeSpan.className = 'size-badge';
+                    sizeSpan.textContent = formatBytes(child.size, 1);
+                    itemDiv.appendChild(sizeSpan);
                 }
 
                 li.appendChild(itemDiv);
