@@ -26,9 +26,6 @@ MigLog.xml
 
 # Node / package manager files (in case user adds frontend/visual tools)
 node_modules/
-package-lock.json
-yarn.lock
-pnpm-lock.yaml
 
 # Local environment file overrides
 .env
