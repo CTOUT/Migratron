@@ -27,6 +27,7 @@
     "compress": false,
     "generateManifest": true,
     "excludePaths": [
+      "%USERPROFILE%\\OneDrive",
       "D:\\",
       "E:\\UnwantedFolder"
     ],

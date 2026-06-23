@@ -13,7 +13,9 @@
     "compress": false,
     "encrypt": false,
     "generateManifest": true,
-    "excludePaths": [],
+    "excludePaths": [
+      "%USERPROFILE%\\OneDrive"
+    ],
     "includePaths": [
       "%USERPROFILE%\\AppData\\LocalLow"
     ],
