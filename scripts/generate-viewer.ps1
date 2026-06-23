@@ -18,9 +18,9 @@ if (-not (Test-Path $ManifestPath)) {
 }
 
 Log "Reading manifest and generating HTML viewer..." 'INFO'
-$paths = Get-Content $ManifestPath
-# Filter out empty lines and ensure proper escaping
-$paths = $paths | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+$rawLines = Get-Content $ManifestPath
+# Filter out empty lines and force type to raw string to strip PSObject properties
+$paths = $rawLines | Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | ForEach-Object { [string]$_ }
 
 # Convert to JSON array
 $jsonPaths = $paths | ConvertTo-Json -Compress
