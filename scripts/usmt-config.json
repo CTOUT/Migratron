@@ -19,6 +19,7 @@
       "%OneDriveCommercial%",
       "%USERPROFILE%\\Dropbox",
       "%LOCALAPPDATA%\\Google\\DriveFS",
+      "%LOCALAPPDATA%\\Box",
       "%USERPROFILE%\\Box",
       "%USERPROFILE%\\Box Sync"
     ],
