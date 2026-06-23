@@ -91,6 +91,49 @@ if ($config.backup.excludePaths -and $config.backup.excludePaths.Count -gt 0) {
     $customXmlCreated = $true
 }
 
+# Generate custom inclusion XML dynamically if includePaths is specified
+$includeXmlPath = Join-Path $PSScriptRoot "IncludeCustom.xml"
+$includeXmlCreated = $false
+
+if ($config.backup.includePaths -and $config.backup.includePaths.Count -gt 0) {
+    Log "Generating custom inclusion rules (IncludeCustom.xml)..." 'INFO'
+    $xmlLines = @(
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        '<migration urlid="http://www.microsoft.com/migration/1.0/migxmlext/IncludeCustom">',
+        '  <component type="Documents" context="UserAndSystem">',
+        '    <displayName>Custom User Inclusions</displayName>',
+        '    <role role="Data">',
+        '      <rules>',
+        '        <unconditionalInclude>',
+        '          <objectSet>'
+    )
+    foreach ($path in $config.backup.includePaths) {
+        $resolvedPath = Resolve-PathVariables -Path $path
+        $cleanPath = $resolvedPath.TrimEnd('\')
+        if ($cleanPath -match '^[a-zA-Z]:$') {
+            $cleanPath = "$cleanPath\"
+        }
+        if ($cleanPath.EndsWith('\')) {
+            $patternPath = "${cleanPath}* [*]"
+        }
+        else {
+            $patternPath = "${cleanPath}\* [*]"
+        }
+        $safePatternPath = [System.Security.SecurityElement]::Escape($patternPath)
+        $xmlLines += "            <pattern type=`"File`">$safePatternPath</pattern>"
+    }
+    $xmlLines += @(
+        '          </objectSet>',
+        '        </unconditionalInclude>',
+        '      </rules>',
+        '    </role>',
+        '  </component>',
+        '</migration>'
+    )
+    $xmlLines | Out-File -FilePath $includeXmlPath -Encoding utf8 -Force
+    $includeXmlCreated = $true
+}
+
 $xmlArgs = @()
 foreach ($xml in $config.usmt.xmlFiles) {
     $localXmlPath = Join-Path $PSScriptRoot $xml
@@ -104,6 +147,9 @@ foreach ($xml in $config.usmt.xmlFiles) {
 
 if ($customXmlCreated -and (Test-Path $customXmlPath)) {
     $xmlArgs += "/i:`"$customXmlPath`""
+}
+if ($includeXmlCreated -and (Test-Path $includeXmlPath)) {
+    $xmlArgs += "/i:`"$includeXmlPath`""
 }
 
 # Add standard parameters:
@@ -246,6 +292,9 @@ try {
         if ($customXmlCreated -and (Test-Path $customXmlPath)) {
             Copy-Item -Path $customXmlPath -Destination $xmlStagingDir -Force | Out-Null
         }
+        if ($includeXmlCreated -and (Test-Path $includeXmlPath)) {
+            Copy-Item -Path $includeXmlPath -Destination $xmlStagingDir -Force | Out-Null
+        }
 
         # Backup the Migratron JSON configs
         if (Test-Path $ConfigPath) {
@@ -356,10 +405,14 @@ catch {
     Log "An error occurred during ScanState execution: $_" 'ERROR'
 }
 finally {
-    # Clean up custom XML file
+    # Clean up custom XML files
     if ($customXmlCreated -and (Test-Path $customXmlPath)) {
         Log "Cleaning up custom XML file: $customXmlPath" 'DEBUG'
         Remove-Item -Path $customXmlPath -Force -ErrorAction SilentlyContinue | Out-Null
+    }
+    if ($includeXmlCreated -and (Test-Path $includeXmlPath)) {
+        Log "Cleaning up custom XML file: $includeXmlPath" 'DEBUG'
+        Remove-Item -Path $includeXmlPath -Force -ErrorAction SilentlyContinue | Out-Null
     }
     
     # Clean up staging directory

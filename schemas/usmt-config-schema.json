@@ -60,6 +60,11 @@
           "type": "ARRAY",
           "items": { "type": "STRING" },
           "description": "User-specific directories or drives to exclude recursively"
+        },
+        "includePaths": {
+          "type": "ARRAY",
+          "items": { "type": "STRING" },
+          "description": "List of paths to explicitly include in the backup, overriding default USMT omissions. Environment variables are supported."
         }
       },
       "required": ["outputDir", "retentionCount", "compress", "encrypt"]

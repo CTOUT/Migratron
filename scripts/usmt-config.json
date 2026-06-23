@@ -13,7 +13,10 @@
     "compress": false,
     "encrypt": false,
     "generateManifest": true,
-    "excludePaths": []
+    "excludePaths": [],
+    "includePaths": [
+      "%USERPROFILE%\\AppData\\LocalLow"
+    ]
   },
   "schedule": {
     "taskName": "MigratronSnapshot",
