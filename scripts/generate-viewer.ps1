@@ -180,7 +180,7 @@ $html = @"
     </div>
 
     <script>
-        const paths = `$jsonPaths`;
+        const paths = $jsonPaths;
         
         // Build Tree
         const tree = { name: "Root", children: {}, files: 0, isDir: true };
