@@ -4,16 +4,8 @@
     "customPath": "",
     "userScope": "current",
     "users": [],
-    "xmlFiles": [
-      "MigApp.xml",
-      "MigUser.xml",
-      "ExcludeCommon.xml"
-    ],
-    "additionalArgs": [
-      "/c",
-      "/v:1",
-      "/efs:skip"
-    ]
+    "xmlFiles": ["MigApp.xml", "MigUser.xml", "ExcludeCommon.xml"],
+    "additionalArgs": ["/c", "/v:1", "/efs:skip"]
   },
   "backup": {
     "outputDir": "$ONEDRIVE\\MigratronBackups",

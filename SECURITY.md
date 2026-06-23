@@ -15,7 +15,6 @@ Migratron follows [Semantic Versioning](https://semver.org/). Security fixes are
 
 Open a [GitHub Security Advisory](https://github.com/CTOUT/Migratron/security/advisories/new) to report a vulnerability privately.
 
-
 Include:
 
 - A description of the vulnerability and its potential impact

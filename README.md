@@ -112,7 +112,7 @@ Launch the toolkit without parameters to access the dashboard. If you pick an op
 
 #### Extracting Files Manually (Without ADK Installation)
 
-Every successful backup automatically syncs a copy of the USMT binaries to `USMT-Binaries/` inside your backup output folder. You do **not** need to install the full Windows ADK on a new PC to extract files. 
+Every successful backup automatically syncs a copy of the USMT binaries to `USMT-Binaries/` inside your backup output folder. You do **not** need to install the full Windows ADK on a new PC to extract files.
 
 You can use the included `usmtutils.exe` to manually extract files directly from a backup store without performing a full system restore:
 
@@ -123,7 +123,6 @@ You can use the included `usmtutils.exe` to manually extract files directly from
 # Extract only specific files using pattern matching (e.g., config files)
 .\USMT-Binaries\usmtutils.exe /extract "E:\Backups\migratron-store-20260101-120000\USMT\USMT.MIG" "C:\ExtractedStore" /i:"*.json"
 ```
-
 
 #### Configure Automated Snapshots:
 
@@ -146,31 +145,31 @@ You can customise USMT settings, folders, and rules by editing [usmt-config.json
 
 ### `usmt` section
 
-| Property | Type | Default | Description |
-|---|---|---|---|
-| `customPath` | string | `""` | Custom path to USMT `amd64` folder if not using the standard ADK installation. |
-| `userScope` | `"current"` \| `"all"` | `"current"` | Controls which profiles ScanState captures. `"current"` captures only the user running the backup; `"all"` captures every profile on the machine. Ignored when `users` is non-empty. |
-| `users` | string[] | `[]` | Explicit list of usernames to capture (e.g. `["Alice"]` or `["DOMAIN\\Alice", "DOMAIN\\Bob"]`). Takes precedence over `userScope`. Unqualified names are auto-prefixed with the current domain. |
-| `xmlFiles` | string[] | See below | USMT rule XML files passed to `ScanState`/`LoadState`. Defaults: `MigApp.xml`, `MigUser.xml`, `ExcludeCommon.xml`. |
-| `additionalArgs` | string[] | `["/c", "/v:1", "/efs:skip"]` | Extra arguments passed directly to USMT. Use `/v:N` to control log verbosity: `1` = errors (default), `5` = status, `7` = verbose, `13` = full debug. |
+| Property         | Type                   | Default                       | Description                                                                                                                                                                                     |
+| ---------------- | ---------------------- | ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `customPath`     | string                 | `""`                          | Custom path to USMT `amd64` folder if not using the standard ADK installation.                                                                                                                  |
+| `userScope`      | `"current"` \| `"all"` | `"current"`                   | Controls which profiles ScanState captures. `"current"` captures only the user running the backup; `"all"` captures every profile on the machine. Ignored when `users` is non-empty.            |
+| `users`          | string[]               | `[]`                          | Explicit list of usernames to capture (e.g. `["Alice"]` or `["DOMAIN\\Alice", "DOMAIN\\Bob"]`). Takes precedence over `userScope`. Unqualified names are auto-prefixed with the current domain. |
+| `xmlFiles`       | string[]               | See below                     | USMT rule XML files passed to `ScanState`/`LoadState`. Defaults: `MigApp.xml`, `MigUser.xml`, `ExcludeCommon.xml`.                                                                              |
+| `additionalArgs` | string[]               | `["/c", "/v:1", "/efs:skip"]` | Extra arguments passed directly to USMT. Use `/v:N` to control log verbosity: `1` = errors (default), `5` = status, `7` = verbose, `13` = full debug.                                           |
 
 ### `backup` section
 
-| Property | Type | Default | Description |
-|---|---|---|---|
-| `outputDir` | string | `$ONEDRIVE\MigratronBackups` | Target directory for backup archives. Supports environment variables (`$HOME`, `$APPDATA`, `$ONEDRIVE`, etc.). |
-| `retentionCount` | integer | `5` | Number of backup ZIP files to retain. Older archives are pruned automatically after each successful backup. |
-| `compress` | boolean | `false` | Compress the USMT migration store into a ZIP archive after capture. |
-| `encrypt` | boolean | `false` | Placeholder for future encryption support. A runtime warning is emitted when this is `false`. |
-| `excludePaths` | string[] | `[]` | Directories or drive roots to recursively exclude (e.g. `["D:\\", "C:\\LargeFolder"]`). Dynamically generates a USMT exclusion XML (`ExcludeCustom.xml`) on each run. |
+| Property         | Type     | Default                      | Description                                                                                                                                                           |
+| ---------------- | -------- | ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `outputDir`      | string   | `$ONEDRIVE\MigratronBackups` | Target directory for backup archives. Supports environment variables (`$HOME`, `$APPDATA`, `$ONEDRIVE`, etc.).                                                        |
+| `retentionCount` | integer  | `5`                          | Number of backup ZIP files to retain. Older archives are pruned automatically after each successful backup.                                                           |
+| `compress`       | boolean  | `false`                      | Compress the USMT migration store into a ZIP archive after capture.                                                                                                   |
+| `encrypt`        | boolean  | `false`                      | Placeholder for future encryption support. A runtime warning is emitted when this is `false`.                                                                         |
+| `excludePaths`   | string[] | `[]`                         | Directories or drive roots to recursively exclude (e.g. `["D:\\", "C:\\LargeFolder"]`). Dynamically generates a USMT exclusion XML (`ExcludeCustom.xml`) on each run. |
 
 ### `schedule` section
 
-| Property | Type | Default | Description |
-|---|---|---|---|
-| `taskName` | string | `MigratronSnapshot` | Name of the Windows Scheduled Task. |
-| `trigger` | `"Daily"` \| `"AtLogon"` \| `"OnIdle"` | `"Daily"` | When the scheduled task fires. |
-| `time` | string | `"22:00"` | Time for `Daily` trigger in `HH:mm` format. |
+| Property   | Type                                   | Default             | Description                                 |
+| ---------- | -------------------------------------- | ------------------- | ------------------------------------------- |
+| `taskName` | string                                 | `MigratronSnapshot` | Name of the Windows Scheduled Task.         |
+| `trigger`  | `"Daily"` \| `"AtLogon"` \| `"OnIdle"` | `"Daily"`           | When the scheduled task fires.              |
+| `time`     | string                                 | `"22:00"`           | Time for `Daily` trigger in `HH:mm` format. |
 
 ### Modular Exclusions & Local Overrides
 
