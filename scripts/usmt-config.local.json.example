@@ -29,7 +29,8 @@
     "excludePaths": [
       "D:\\",
       "E:\\UnwantedFolder"
-    ]
+    ],
+    "waitForSync": true
   },
   "schedule": {
     "taskName": "MigratronSnapshot",

@@ -395,6 +395,15 @@ try {
                 }
             }
         }
+        
+        if ($null -ne $config.backup.waitForSync -and $config.backup.waitForSync) {
+            Step "OneDrive Sync Verification"
+            if ($config.backup.compress) {
+                Wait-OneDriveSync -Path $zipFilePath
+            } else {
+                Wait-OneDriveSync -Path $destFolder
+            }
+        }
     }
     else {
         Log "ScanState failed with exit code: $exitCode." 'ERROR'

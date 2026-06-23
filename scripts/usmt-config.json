@@ -16,7 +16,8 @@
     "excludePaths": [],
     "includePaths": [
       "%USERPROFILE%\\AppData\\LocalLow"
-    ]
+    ],
+    "waitForSync": true
   },
   "schedule": {
     "taskName": "MigratronSnapshot",

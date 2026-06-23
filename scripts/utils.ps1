@@ -233,3 +233,84 @@ function Get-FormatSize {
     }
 }
 #endregion
+
+#region OneDrive Integration
+function Wait-OneDriveSync {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory=$true)]
+        [string]$Path,
+        [int]$TimeoutMinutes = 30
+    )
+
+    if (-not (Test-Path $Path)) { return }
+
+    $Shell = New-Object -ComObject Shell.Application
+    $Folder = $Shell.NameSpace((Split-Path $Path))
+    if ($null -eq $Folder) { return }
+    $File = $Folder.ParseName((Split-Path $Path -Leaf))
+    if ($null -eq $File) { return }
+
+    # Dynamically find the index for "Availability status"
+    $statusIndex = -1
+    for ($i = 0; $i -lt 400; $i++) {
+        $propName = $Folder.GetDetailsOf($null, $i)
+        if ($propName -match "(?i)Availability status") {
+            $testVal = $Folder.GetDetailsOf($File, $i)
+            if (-not [string]::IsNullOrEmpty($testVal)) {
+                $statusIndex = $i
+                break
+            }
+        }
+    }
+
+    # Fallback to "Status" if Availability status fails
+    if ($statusIndex -eq -1) {
+        for ($i = 0; $i -lt 400; $i++) {
+            $propName = $Folder.GetDetailsOf($null, $i)
+            if ($propName -match "^Status$") {
+                $testVal = $Folder.GetDetailsOf($File, $i)
+                if (-not [string]::IsNullOrEmpty($testVal)) {
+                    $statusIndex = $i
+                    break
+                }
+            }
+        }
+    }
+
+    if ($statusIndex -eq -1) {
+        Log "Could not find OneDrive 'Availability status' property. Skipping sync verification." 'WARN'
+        return
+    }
+
+    $timeout = [TimeSpan]::FromMinutes($TimeoutMinutes)
+    $sw = [Diagnostics.Stopwatch]::StartNew()
+    $synced = $false
+
+    Log "Waiting for OneDrive to synchronize: $(Split-Path $Path -Leaf)..." 'INFO'
+
+    while ($sw.Elapsed -lt $timeout) {
+        $status = $Folder.GetDetailsOf($File, $statusIndex)
+        
+        if ([string]::IsNullOrEmpty($status)) {
+            Log "File does not appear to be tracked by OneDrive (No status). Skipping wait." 'WARN'
+            return
+        }
+        
+        if ($status -notmatch "(?i)sync") {
+            $synced = $true
+            break
+        }
+        
+        Start-Sleep -Seconds 10
+    }
+
+    $sw.Stop()
+    
+    if ($synced) {
+        Log "OneDrive synchronization completed in $([math]::Round($sw.Elapsed.TotalSeconds, 1))s. (Status: $status)" 'SUCCESS'
+    } else {
+        Log "OneDrive synchronization timed out after $TimeoutMinutes minutes. (Status: $status)" 'WARN'
+    }
+}
+#endregion

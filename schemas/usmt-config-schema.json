@@ -65,6 +65,10 @@
           "type": "ARRAY",
           "items": { "type": "STRING" },
           "description": "List of paths to explicitly include in the backup, overriding default USMT omissions. Environment variables are supported."
+        },
+        "waitForSync": {
+          "type": "BOOLEAN",
+          "description": "If true, the backup script will pause at the very end until OneDrive has fully uploaded the archive to the cloud."
         }
       },
       "required": ["outputDir", "retentionCount", "compress", "encrypt"]
