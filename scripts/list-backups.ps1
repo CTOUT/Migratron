@@ -54,6 +54,11 @@ while ($true) {
         break
     }
     
+    if ($null -eq $backups -or $backups.Count -eq 0) {
+        Read-Host "`nPress Enter to return..."
+        break
+    }
+    
     Write-Host ""
     $choice = Read-Host "Enter the number of the backup to delete (or press Enter to return)"
     if ([string]::IsNullOrWhiteSpace($choice)) {

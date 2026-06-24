@@ -122,6 +122,7 @@ if ($hasSwitch) {
     }
 }
 else {
+    [console]::TreatControlCAsInput = $true
     # No switches: run interactive menu
     :MainMenu while ($true) {
         Show-MenuHeader -Title "M I G R A T R O N" -Subtitle "Windows Settings Migration Toolkit (USMT)"
@@ -384,72 +385,49 @@ else {
                                         $newEncEncoded = if ($encChoiceStr -eq "1") { $false } else { $true }
                                         $localCfg.backup | Add-Member -MemberType NoteProperty -Name "encryptionKeyEncoded" -Value $newEncEncoded -Force
                                         
-                                        while ($true) {
-                                            $newKey = Read-Host -AsSecureString "Enter encryption key to enable (leave empty to cancel)"
-                                            $plainKey = Convert-SecureStringToPlaintext -SecureString $newKey
-                                            
-                                            if ([string]::IsNullOrWhiteSpace($plainKey)) {
-                                                Write-Host "[-] Action cancelled. No key provided. Encryption will remain disabled." -ForegroundColor Yellow
-                                                $val = $false
-                                                $localCfg.backup.psobject.Properties.Remove("encryptionKeyEncoded")
-                                                Start-Sleep -Seconds 2
-                                                break
+                                        $newKey = Read-ConfirmedSecureString -Prompt "Enter encryption key to enable (leave empty to cancel)"
+                                        
+                                        if ($null -eq $newKey) {
+                                            Write-Host "[-] Action cancelled. No key provided. Encryption will remain disabled." -ForegroundColor Yellow
+                                            $val = $false
+                                            $localCfg.backup.psobject.Properties.Remove("encryptionKeyEncoded")
+                                            Start-Sleep -Seconds 2
+                                        } else {
+                                            if ($newEncEncoded) {
+                                                $encodedString = ConvertFrom-SecureString $newKey
+                                                $localCfg.backup | Add-Member -MemberType NoteProperty -Name "encryptionKey" -Value $encodedString -Force
                                             } else {
-                                                $confirmKey = Read-Host -AsSecureString "Confirm encryption key"
-                                                $plainConfirm = Convert-SecureStringToPlaintext -SecureString $confirmKey
-                                                if ($plainKey -cne $plainConfirm) {
-                                                    Write-Host "[X] Error: Keys do not match. Please try again." -ForegroundColor Red
-                                                    Write-Host ""
-                                                    continue
-                                                }
-                                                
-                                                if ($newEncEncoded) {
-                                                    $encodedString = ConvertFrom-SecureString $newKey
-                                                    $localCfg.backup | Add-Member -MemberType NoteProperty -Name "encryptionKey" -Value $encodedString -Force
-                                                } else {
-                                                    $localCfg.backup | Add-Member -MemberType NoteProperty -Name "encryptionKey" -Value $plainKey -Force
-                                                }
-                                                Write-Host "[√] Success: Encryption key set successfully." -ForegroundColor Green
-                                                Start-Sleep -Seconds 1
-                                                break
+                                                $plainKey = Convert-SecureStringToPlaintext -SecureString $newKey
+                                                $localCfg.backup | Add-Member -MemberType NoteProperty -Name "encryptionKey" -Value $plainKey -Force
                                             }
+                                            Write-Host "[√] Success: Encryption key set successfully." -ForegroundColor Green
+                                            Start-Sleep -Seconds 1
                                         }
                                     }
                                     $localCfg.backup | Add-Member -MemberType NoteProperty -Name "encrypt" -Value $val -Force
                                 Set-LocalConfig -ConfigObject $localCfg
                             }
                             elseif ($keyOpt -ne -1 -and $editChoice -eq "$keyOpt") {
-                                while ($true) {
-                                    $newKey = Read-Host -AsSecureString "Enter new encryption key (leave empty to clear/cancel)"
-                                    $plainKey = Convert-SecureStringToPlaintext -SecureString $newKey
-                                    if ([string]::IsNullOrWhiteSpace($plainKey)) {
-                                        $localCfg.backup.psobject.Properties.Remove("encryptionKey")
-                                        $localCfg.backup.psobject.Properties.Remove("encryptionKeyEncoded")
-                                        $localCfg.backup | Add-Member -MemberType NoteProperty -Name "encrypt" -Value $false -Force
-                                        Set-LocalConfig -ConfigObject $localCfg
-                                        Write-Host "[-] Encryption key cleared and encryption disabled." -ForegroundColor Yellow
-                                        Start-Sleep -Seconds 1
-                                        break
+                                $newKey = Read-ConfirmedSecureString -Prompt "Enter new encryption key (leave empty to clear/cancel)" -ConfirmPrompt "Confirm new encryption key"
+                                
+                                if ($null -eq $newKey) {
+                                    $localCfg.backup.psobject.Properties.Remove("encryptionKey")
+                                    $localCfg.backup.psobject.Properties.Remove("encryptionKeyEncoded")
+                                    $localCfg.backup | Add-Member -MemberType NoteProperty -Name "encrypt" -Value $false -Force
+                                    Set-LocalConfig -ConfigObject $localCfg
+                                    Write-Host "[-] Encryption key cleared and encryption disabled." -ForegroundColor Yellow
+                                    Start-Sleep -Seconds 1
+                                } else {
+                                    if ($encEncoded) {
+                                        $encodedString = ConvertFrom-SecureString $newKey
+                                        $localCfg.backup | Add-Member -MemberType NoteProperty -Name "encryptionKey" -Value $encodedString -Force
                                     } else {
-                                        $confirmKey = Read-Host -AsSecureString "Confirm new encryption key"
-                                        $plainConfirm = Convert-SecureStringToPlaintext -SecureString $confirmKey
-                                        if ($plainKey -cne $plainConfirm) {
-                                            Write-Host "[X] Error: Keys do not match. Please try again." -ForegroundColor Red
-                                            Write-Host ""
-                                            continue
-                                        }
-                                        
-                                        if ($encEncoded) {
-                                            $encodedString = ConvertFrom-SecureString $newKey
-                                            $localCfg.backup | Add-Member -MemberType NoteProperty -Name "encryptionKey" -Value $encodedString -Force
-                                        } else {
-                                            $localCfg.backup | Add-Member -MemberType NoteProperty -Name "encryptionKey" -Value $plainKey -Force
-                                        }
-                                        Set-LocalConfig -ConfigObject $localCfg
-                                        Write-Host "[√] Success: Encryption key updated successfully." -ForegroundColor Green
-                                        Start-Sleep -Seconds 1
-                                        break
+                                        $plainKey = Convert-SecureStringToPlaintext -SecureString $newKey
+                                        $localCfg.backup | Add-Member -MemberType NoteProperty -Name "encryptionKey" -Value $plainKey -Force
                                     }
+                                    Set-LocalConfig -ConfigObject $localCfg
+                                    Write-Host "[√] Success: Encryption key updated successfully." -ForegroundColor Green
+                                    Start-Sleep -Seconds 1
                                 }
                             }
                             elseif ($encOpt -ne -1 -and $editChoice -eq "$encOpt") {
@@ -458,35 +436,23 @@ else {
                                 Write-Host ""
                                 Write-Host "[!] Warning: Changing key encoding requires re-entering your encryption key." -ForegroundColor Yellow
                                 
-                                while ($true) {
-                                    $newKey = Read-Host -AsSecureString "Enter encryption key (leave empty to cancel)"
-                                    $plainKey = Convert-SecureStringToPlaintext -SecureString $newKey
-                                    
-                                    if ([string]::IsNullOrWhiteSpace($plainKey)) {
-                                        Write-Host "[-] Action cancelled. Encoding unchanged." -ForegroundColor DarkGray
-                                        Start-Sleep -Seconds 1
-                                        break
+                                $newKey = Read-ConfirmedSecureString -Prompt "Enter encryption key (leave empty to cancel)"
+                                
+                                if ($null -eq $newKey) {
+                                    Write-Host "[-] Action cancelled. Encoding unchanged." -ForegroundColor DarkGray
+                                    Start-Sleep -Seconds 1
+                                } else {
+                                    $localCfg.backup | Add-Member -MemberType NoteProperty -Name "encryptionKeyEncoded" -Value $newEncEncoded -Force
+                                    if ($newEncEncoded) {
+                                        $encodedString = ConvertFrom-SecureString $newKey
+                                        $localCfg.backup | Add-Member -MemberType NoteProperty -Name "encryptionKey" -Value $encodedString -Force
                                     } else {
-                                        $confirmKey = Read-Host -AsSecureString "Confirm encryption key"
-                                        $plainConfirm = Convert-SecureStringToPlaintext -SecureString $confirmKey
-                                        if ($plainKey -cne $plainConfirm) {
-                                            Write-Host "[X] Error: Keys do not match. Please try again." -ForegroundColor Red
-                                            Write-Host ""
-                                            continue
-                                        }
-                                        
-                                        $localCfg.backup | Add-Member -MemberType NoteProperty -Name "encryptionKeyEncoded" -Value $newEncEncoded -Force
-                                        if ($newEncEncoded) {
-                                            $encodedString = ConvertFrom-SecureString $newKey
-                                            $localCfg.backup | Add-Member -MemberType NoteProperty -Name "encryptionKey" -Value $encodedString -Force
-                                        } else {
-                                            $localCfg.backup | Add-Member -MemberType NoteProperty -Name "encryptionKey" -Value $plainKey -Force
-                                        }
-                                        Set-LocalConfig -ConfigObject $localCfg
-                                        Write-Host "[√] Success: Encoding toggled and key updated successfully." -ForegroundColor Green
-                                        Start-Sleep -Seconds 1
-                                        break
+                                        $plainKey = Convert-SecureStringToPlaintext -SecureString $newKey
+                                        $localCfg.backup | Add-Member -MemberType NoteProperty -Name "encryptionKey" -Value $plainKey -Force
                                     }
+                                    Set-LocalConfig -ConfigObject $localCfg
+                                    Write-Host "[√] Success: Encoding toggled and key updated successfully." -ForegroundColor Green
+                                    Start-Sleep -Seconds 1
                                 }
                             }
                             elseif ($testOpt -ne -1 -and $editChoice -eq "$testOpt") {

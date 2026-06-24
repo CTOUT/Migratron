@@ -80,6 +80,31 @@ function Convert-SecureStringToPlaintext {
         }
     }
 }
+
+function Read-ConfirmedSecureString {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Prompt,
+        [string]$ConfirmPrompt = "Confirm encryption key"
+    )
+    while ($true) {
+        $newKey = Read-Host -AsSecureString "$Prompt"
+        $plainKey = Convert-SecureStringToPlaintext -SecureString $newKey
+        
+        if ([string]::IsNullOrWhiteSpace($plainKey)) {
+            return $null
+        } else {
+            $confirmKey = Read-Host -AsSecureString "$ConfirmPrompt"
+            $plainConfirm = Convert-SecureStringToPlaintext -SecureString $confirmKey
+            if ($plainKey -cne $plainConfirm) {
+                Write-Host "[X] Error: Keys do not match. Please try again." -ForegroundColor Red
+                Write-Host ""
+                continue
+            }
+            return $newKey
+        }
+    }
+}
 #endregion
 
 #region Path Resolution
@@ -164,7 +189,8 @@ function Get-UsmtConfig {
         return $json
     }
     catch {
-        throw "Failed to parse JSON config: $_"
+        Log "Failed to parse JSON config: $_" 'ERROR'
+        return $null
     }
 }
 
@@ -400,10 +426,14 @@ function Wait-OneDriveSync {
             break
         }
         
+        $percentComplete = [math]::Min(100, [math]::Floor(($sw.Elapsed.TotalSeconds / $timeout.TotalSeconds) * 100))
+        Write-Progress -Activity "OneDrive Synchronization" -Status "Syncing: $(Split-Path $Path -Leaf) ($status)" -PercentComplete $percentComplete
+        
         Start-Sleep -Seconds 10
     }
 
     $sw.Stop()
+    Write-Progress -Activity "OneDrive Synchronization" -Completed
     
     if ($synced) {
         Log "OneDrive synchronization completed in $([math]::Round($sw.Elapsed.TotalSeconds, 1))s. (Status: $status)" 'SUCCESS'
