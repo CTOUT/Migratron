@@ -503,3 +503,47 @@ function Get-BackupSelection {
     }
 }
 #endregion
+
+function Write-UsmtKeyFile {
+    param (
+        [string]$Timestamp,
+        [string]$EncryptionKey,
+        [string]$AttemptSuffix = ""
+    )
+    $tempKeyFile = Join-Path $env:TEMP "migratron-key-$Timestamp$AttemptSuffix.txt"
+    $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+    [System.IO.File]::WriteAllText($tempKeyFile, $EncryptionKey, $utf8NoBom)
+    return $tempKeyFile
+}
+
+function Remove-UsmtKeyFile {
+    param (
+        [string]$TempKeyFile
+    )
+    if ($null -ne $TempKeyFile -and (Test-Path $TempKeyFile)) {
+        Log "Shredding temporary decryption key file..." 'DEBUG'
+        Remove-Item -Path $TempKeyFile -Force -ErrorAction SilentlyContinue | Out-Null
+    }
+}
+
+function Expand-SecureArchive {
+    param (
+        [string]$ArchivePath,
+        [string]$StagingDir
+    )
+    Log "Extracting backup ZIP to staging: $StagingDir" 'DEBUG'
+    New-Item -ItemType Directory -Path $StagingDir -Force | Out-Null
+    Expand-Archive -Path $ArchivePath -DestinationPath $StagingDir -Force
+    
+    $canonicalStaging = [System.IO.Path]::GetFullPath($StagingDir).TrimEnd('\') + '\'
+    $extractedItems = Get-ChildItem -Path $StagingDir -Recurse -Force
+    foreach ($item in $extractedItems) {
+        $canonicalItem = [System.IO.Path]::GetFullPath($item.FullName)
+        if (-not $canonicalItem.StartsWith($canonicalStaging, [System.StringComparison]::OrdinalIgnoreCase)) {
+            Log "Directory traversal detected in ZIP archive! Aborting. Offending entry: $($item.FullName)" 'ERROR'
+            Remove-Item -Path $StagingDir -Recurse -Force -ErrorAction SilentlyContinue
+            return $false
+        }
+    }
+    return $true
+}

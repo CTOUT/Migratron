@@ -1,4 +1,4 @@
-﻿[CmdletBinding()]
+[CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)]
     [string]$BackupPath,
@@ -46,21 +46,9 @@ try {
     
     if ($isZip) {
         $storeFolder = $StagingDir
-        Log "Extracting backup ZIP to staging: $StagingDir" 'DEBUG'
         if (-not $DryRun) {
-            New-Item -ItemType Directory -Path $StagingDir -Force | Out-Null
-            Expand-Archive -Path $BackupPath -DestinationPath $StagingDir -Force
-    
-            $canonicalStaging = [System.IO.Path]::GetFullPath($StagingDir).TrimEnd('\') + '\'
-            $extractedItems = Get-ChildItem -Path $StagingDir -Recurse -Force
-            foreach ($item in $extractedItems) {
-                $canonicalItem = [System.IO.Path]::GetFullPath($item.FullName)
-                if (-not $canonicalItem.StartsWith($canonicalStaging, [System.StringComparison]::OrdinalIgnoreCase)) {
-                    Log "Directory traversal detected in ZIP archive! Aborting verify. Offending entry: $($item.FullName)" 'ERROR'
-                    Remove-Item -Path $StagingDir -Recurse -Force -ErrorAction SilentlyContinue
-                    return
-                }
-            }
+            $success = Expand-SecureArchive -ArchivePath $BackupPath -StagingDir $StagingDir
+            if (-not $success) { return }
         }
     }
     else {
@@ -119,9 +107,7 @@ try {
                 }
             }
             
-            $tempKeyFile = Join-Path $env:TEMP "migratron-key-$timestamp-$attempt.txt"
-            $utf8NoBom = New-Object System.Text.UTF8Encoding $false
-            [System.IO.File]::WriteAllText($tempKeyFile, $encryptionKey, $utf8NoBom)
+            $tempKeyFile = Write-UsmtKeyFile -Timestamp $timestamp -EncryptionKey $encryptionKey -AttemptSuffix "-$attempt"
             
             $argList += "/decrypt:AES_256"
             $argList += "/keyfile:`"$tempKeyFile`""
@@ -169,9 +155,7 @@ try {
             break
         }
         finally {
-            if ($tempKeyFile -and (Test-Path $tempKeyFile)) {
-                Remove-Item -Path $tempKeyFile -Force -ErrorAction SilentlyContinue
-            }
+            Remove-UsmtKeyFile -TempKeyFile $tempKeyFile
         }
     }
     

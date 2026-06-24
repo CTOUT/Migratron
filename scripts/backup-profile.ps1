@@ -32,9 +32,8 @@ if ($config.backup.encrypt) {
         return
     }
     # Write the key to a highly restricted temp file without BOM or Newlines
-    $tempKeyFile = Join-Path $env:TEMP "migratron-key-$timestamp.txt"
-    $utf8NoBom = New-Object System.Text.UTF8Encoding $false
-    [System.IO.File]::WriteAllText($tempKeyFile, $encryptionKey, $utf8NoBom)
+    $timestamp = (Get-Date).ToString("yyyyMMdd-HHmmss")
+    $tempKeyFile = Write-UsmtKeyFile -Timestamp $timestamp -EncryptionKey $encryptionKey
     Log "Encryption enabled. Key securely piped to temporary keyfile." 'SUCCESS'
 }
 else {
@@ -43,7 +42,6 @@ else {
 }
 
 $outputDirResolved = Resolve-PathVariables -Path $config.backup.outputDir
-$timestamp = (Get-Date).ToString("yyyyMMdd-HHmmss")
 
 # Ensure OutputDir exists
 if (-not $DryRun -and -not (Test-Path $outputDirResolved)) {
@@ -509,10 +507,7 @@ finally {
     }
     
     # Shred temp key file securely
-    if ($null -ne $tempKeyFile -and (Test-Path $tempKeyFile)) {
-        Log "Shredding temporary encryption key file..." 'DEBUG'
-        Remove-Item -Path $tempKeyFile -Force -ErrorAction SilentlyContinue | Out-Null
-    }
+    Remove-UsmtKeyFile -TempKeyFile $tempKeyFile
     # Clean up loose log if process failed
     if (Test-Path $logFile) {
         Log "Log file is available at: $logFile" 'INFO'

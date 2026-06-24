@@ -57,25 +57,9 @@ $storeFolder = ""
 
 if ($isZip) {
     $storeFolder = $StagingDir
-    Log "Extracting backup ZIP to staging: $StagingDir" 'DEBUG'
     if (-not $DryRun) {
-        New-Item -ItemType Directory -Path $StagingDir -Force | Out-Null
-        Expand-Archive -Path $BackupPath -DestinationPath $StagingDir -Force
-
-        # --- FIX #5: Zip Slip protection ---
-        # Verify every extracted path is contained within $StagingDir to prevent
-        # directory traversal attacks via crafted ZIP archives.
-        $canonicalStaging = [System.IO.Path]::GetFullPath($StagingDir).TrimEnd('\') + '\'
-        $extractedItems = Get-ChildItem -Path $StagingDir -Recurse -Force
-        foreach ($item in $extractedItems) {
-            $canonicalItem = [System.IO.Path]::GetFullPath($item.FullName)
-            if (-not $canonicalItem.StartsWith($canonicalStaging, [System.StringComparison]::OrdinalIgnoreCase)) {
-                Log "Directory traversal detected in ZIP archive! Aborting restore. Offending entry: $($item.FullName)" 'ERROR'
-                Remove-Item -Path $StagingDir -Recurse -Force -ErrorAction SilentlyContinue
-                return
-            }
-        }
-        Log "ZIP archive passed directory traversal check." 'DEBUG'
+        $success = Expand-SecureArchive -ArchivePath $BackupPath -StagingDir $StagingDir
+        if (-not $success) { return }
     }
 }
 else {
@@ -131,9 +115,7 @@ if ($config.backup.encrypt) {
     }
     
     # Write the key to a highly restricted temp file without BOM or Newlines
-    $tempKeyFile = Join-Path $env:TEMP "migratron-key-$timestamp.txt"
-    $utf8NoBom = New-Object System.Text.UTF8Encoding $false
-    [System.IO.File]::WriteAllText($tempKeyFile, $encryptionKey, $utf8NoBom)
+    $tempKeyFile = Write-UsmtKeyFile -Timestamp $timestamp -EncryptionKey $encryptionKey
     Log "Decryption key securely piped to temporary keyfile." 'SUCCESS'
 }
 
@@ -218,10 +200,7 @@ finally {
     }
     
     # Shred temp key file securely
-    if ($null -ne $tempKeyFile -and (Test-Path $tempKeyFile)) {
-        Log "Shredding temporary decryption key file..." 'DEBUG'
-        Remove-Item -Path $tempKeyFile -Force -ErrorAction SilentlyContinue | Out-Null
-    }
+    Remove-UsmtKeyFile -TempKeyFile $tempKeyFile
     # Clean up loose log if process failed
     if (Test-Path $logFile) {
         Log "Log file is available at: $logFile" 'INFO'
