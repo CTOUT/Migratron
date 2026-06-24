@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
     Migratron - Windows Settings Migration Toolkit (USMT Edition)
-    Version: 1.1.0
+    Version: 1.2.0
 
 .DESCRIPTION
     A lightweight utility that wraps Windows User State Migration Tool (USMT)

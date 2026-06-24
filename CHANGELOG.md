@@ -11,6 +11,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [v1.2.0] — 2026-06-24
+
+### Added
+
+- **Interactive Verification Loop** — Added a `while` loop to the `[3] Verify Backup Archive` menu choice, allowing sequential verification of multiple archives without returning to the root menu.
+- **Custom Backup Output Directory** — Added `[4] Set Backup Output Directory` to the configuration dashboard, allowing users to select between Corporate OneDrive, Consumer OneDrive, or arbitrary custom paths.
+- **Verify Menu UI Refresh** — Added `Clear-Host` and `Show-MenuHeader` to the verify loop to keep the dashboard uncluttered during repetitive verifications.
+
+### Changed
+
+- **Codebase Refactoring (DRY & KISS)** — Abstracted ZIP extraction (`Expand-SecureArchive`) and DPAPI encryption key handling (`Write-UsmtKeyFile`) into central `utils.ps1` helpers, significantly shrinking and simplifying `backup-profile`, `restore-profile`, and `verify-backup`.
+- **Password Fallback Limit** — Verification module restricts manual password guesses to a single attempt before cleanly returning to the backup selection list.
+
+### Fixed
+
+- **Zip-Slip Staging Cleanup Vulnerability** — Secured the verification module's `usmtutils` block with strict `try...finally` boundaries to ensure that fully decrypted staging directories (`$env:TEMP`) are forcefully shredded even if the user forcibly aborts execution (`Ctrl+C`) or an unexpected terminating error occurs.
+- **Double-Enter Verification Bug** — Removed redundant `Read-Host "Press Enter"` prompts when cancelling a backup verification selection, ensuring immediate return to the parent menu.
+- **Verification Syntax Error** — Fixed an isolated syntax parsing exception caused by a stray bracket in the retention pruning block of `backup-profile.ps1`.
+
+---
+
 ## [v1.1.0] — 2026-06-24
 
 ### Added
