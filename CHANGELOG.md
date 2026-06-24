@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+---
+
+## [v1.1.0] — 2026-06-24
+
 ### Added
 
 - **Secure Archive Encryption** — Implemented AES_256 encryption via native USMT flags when `encrypt: true`. Supported plain-text passwords and Windows DPAPI encoded SecureStrings via the new `encryptionKeyEncoded` parameter.
