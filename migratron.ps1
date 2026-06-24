@@ -220,12 +220,13 @@ else {
                     Write-Host "  [4] Set Backup Output Directory"
                     Write-Host "  [5] Discover & Add Custom AppData / Game Saves"
                     Write-Host "  [6] Manage Included Custom Paths"
+                    Write-Host "  [7] Manage Excluded Custom Paths"
                     Write-Host "  ---" -ForegroundColor DarkGray
                     Write-Host "  [M] Back to Main Menu"
                     Write-Host "  [Q] Quit"
                     Write-Host ""
                     
-                    $cfgChoice = Read-Host "Select an option [1-6, M, Q]"
+                    $cfgChoice = Read-Host "Select an option [1-7, M, Q]"
                     if ($cfgChoice -match '^[qQ]$') { return }
                     elseif ($cfgChoice -match '^[mM]$') { continue MainMenu }
                     elseif ($cfgChoice -eq "1") {
@@ -240,6 +241,10 @@ else {
                     elseif ($cfgChoice -eq "6") {
                         Write-Host ""
                         & (Join-Path $ScriptDir "manage-paths.ps1")
+                    }
+                    elseif ($cfgChoice -eq "7") {
+                        Write-Host ""
+                        & (Join-Path $ScriptDir "manage-excludes.ps1")
                     }
                     elseif ($cfgChoice -eq "2") {
                         Write-Host ""
