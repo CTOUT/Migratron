@@ -136,7 +136,6 @@ if ($config.backup.encrypt) {
 }
 
 if ($tempKeyFile -and (Test-Path $tempKeyFile)) {
-    $argList += "/decrypt"
     $argList += "/decrypt:AES_256"
     $argList += "/keyfile:`"$tempKeyFile`""
 }

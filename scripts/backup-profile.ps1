@@ -181,7 +181,6 @@ $argList = @(
 )
 
 if ($tempKeyFile -and (Test-Path $tempKeyFile)) {
-    $argList += "/encrypt"
     $argList += "/encrypt:AES_256"
     $argList += "/keyfile:`"$tempKeyFile`""
 }
