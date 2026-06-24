@@ -145,6 +145,9 @@ function Convert-ToUsmtPath {
         $usmtPath = $usmtPath -ireplace [regex]::Escape(${env:ProgramFiles(x86)}), '%CSIDL_PROGRAM_FILESX86%'
     }
     $usmtPath = $usmtPath -ireplace [regex]::Escape($env:ProgramFiles), '%CSIDL_PROGRAM_FILES%'
+    if ($null -ne $env:ProgramData) {
+        $usmtPath = $usmtPath -ireplace [regex]::Escape($env:ProgramData), '%CSIDL_COMMON_APPDATA%'
+    }
     
     return $usmtPath
 }
