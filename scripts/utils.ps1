@@ -12,6 +12,13 @@ function Log {
         [string]$Level = 'INFO'
     )
     $ts = (Get-Date).ToString('yyyy-MM-dd HH:mm:ss')
+    $icon = switch ($Level) {
+        'ERROR' { '[X]' }
+        'WARN' { '[!]' }
+        'SUCCESS' { '[√]' }
+        'DEBUG' { '[-]' }
+        default { '[i]' }
+    }
     $color = switch ($Level) {
         'ERROR' { 'Red' }
         'WARN' { 'Yellow' }
@@ -19,7 +26,7 @@ function Log {
         'DEBUG' { 'DarkGray' }
         default { 'Cyan' }
     }
-    Write-Host "[$ts][$Level] $Message" -ForegroundColor $color
+    Write-Host "[$ts] $icon $Message" -ForegroundColor $color
 }
 
 function Step {
@@ -27,6 +34,51 @@ function Step {
     Write-Host ""
     Write-Host "  ── $Label ──" -ForegroundColor Magenta
     Write-Host ""
+}
+#endregion
+
+#region UX Helpers
+function Show-MenuHeader {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Title,
+        [string]$Subtitle = ""
+    )
+    Clear-Host
+    Write-Host "==================================================" -ForegroundColor Magenta
+    
+    $padLeft = [math]::Max(0, [math]::Floor((50 - $Title.Length) / 2))
+    $padRight = [math]::Max(0, 50 - $Title.Length - $padLeft)
+    $centeredTitle = (" " * $padLeft) + $Title + (" " * $padRight)
+    Write-Host $centeredTitle -ForegroundColor Magenta
+    
+    if (-not [string]::IsNullOrEmpty($Subtitle)) {
+        $padLeftSub = [math]::Max(0, [math]::Floor((50 - $Subtitle.Length) / 2))
+        $padRightSub = [math]::Max(0, 50 - $Subtitle.Length - $padLeftSub)
+        $centeredSubtitle = (" " * $padLeftSub) + $Subtitle + (" " * $padRightSub)
+        Write-Host $centeredSubtitle -ForegroundColor DarkGray
+    }
+    
+    Write-Host "==================================================" -ForegroundColor Magenta
+    Write-Host ""
+}
+#endregion
+
+#region Security Helpers
+function Convert-SecureStringToPlaintext {
+    param(
+        [Parameter(Mandatory = $true)]
+        [System.Security.SecureString]$SecureString
+    )
+    $bstr = [System.IntPtr]::Zero
+    try {
+        $bstr = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($SecureString)
+        return [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($bstr)
+    } finally {
+        if ($bstr -ne [System.IntPtr]::Zero) {
+            [System.Runtime.InteropServices.Marshal]::ZeroFreeBSTR($bstr)
+        }
+    }
 }
 #endregion
 
@@ -100,9 +152,7 @@ function Get-UsmtConfig {
         if ($null -ne $json.backup.encryptionKeyEncoded -and $json.backup.encryptionKeyEncoded -eq $true -and -not [string]::IsNullOrEmpty($json.backup.encryptionKey)) {
             try {
                 $secureStr = ConvertTo-SecureString $json.backup.encryptionKey
-                $bstr = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureStr)
-                $plainText = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($bstr)
-                [System.Runtime.InteropServices.Marshal]::ZeroFreeBSTR($bstr)
+                $plainText = Convert-SecureStringToPlaintext -SecureString $secureStr
                 $json.backup.encryptionKey = $plainText
             }
             catch {

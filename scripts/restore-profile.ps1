@@ -123,7 +123,7 @@ if ($config.backup.encrypt) {
     if ([string]::IsNullOrWhiteSpace($encryptionKey)) {
         Log "Encryption is enabled, but no key was found in the configuration." 'WARN'
         $secPwd = Read-Host "Enter the AES-256 decryption password for this backup" -AsSecureString
-        $encryptionKey = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto([System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($secPwd))
+        $encryptionKey = Convert-SecureStringToPlaintext -SecureString $secPwd
         if ([string]::IsNullOrWhiteSpace($encryptionKey)) {
             Log "Decryption password cannot be empty. Aborting restore." 'ERROR'
             return

@@ -12,14 +12,11 @@ $outputDirResolved = Resolve-PathVariables -Path $config.backup.outputDir
 
 while ($true) {
     if ($InteractiveDelete) {
-        Clear-Host
-        Write-Host "==================================================" -ForegroundColor Magenta
-        Write-Host "                Manage Backups                    " -ForegroundColor Magenta
-        Write-Host "==================================================" -ForegroundColor Magenta
-        Write-Host ""
+        Show-MenuHeader -Title "Manage Backups"
     }
-
+    
     Log "Backup Output Directory: $outputDirResolved" 'INFO'
+    
     if (Test-Path $outputDirResolved) {
         $backups = @(Get-ChildItem -Path $outputDirResolved -Filter "migratron-store-*" | 
                    Where-Object { $_.Name -match '^migratron-store-\d{8}-\d{6}(\.zip)?$' } | 

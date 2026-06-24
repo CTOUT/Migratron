@@ -124,12 +124,7 @@ if ($hasSwitch) {
 else {
     # No switches: run interactive menu
     :MainMenu while ($true) {
-        Clear-Host
-        Write-Host "==================================================" -ForegroundColor Magenta
-        Write-Host "                 M I G R A T R O N                " -ForegroundColor Magenta
-        Write-Host "     Windows Settings Migration Toolkit (USMT)    " -ForegroundColor DarkGray
-        Write-Host "==================================================" -ForegroundColor Magenta
-        Write-Host ""
+        Show-MenuHeader -Title "M I G R A T R O N" -Subtitle "Windows Settings Migration Toolkit (USMT)"
         Write-Host "  [1] Migration Operations (Backup & Restore)"
         Write-Host "  [2] Manage Backups (List & Delete)"
         Write-Host "  [3] Configuration & Automation"
@@ -142,11 +137,7 @@ else {
         switch ($choice) {
             "1" {
                 while ($true) {
-                    Clear-Host
-                    Write-Host "==================================================" -ForegroundColor Magenta
-                    Write-Host "              Migration Operations                " -ForegroundColor Magenta
-                    Write-Host "==================================================" -ForegroundColor Magenta
-                    Write-Host ""
+                    Show-MenuHeader -Title "Migration Operations"
                     Write-Host "  [1] Backup Settings to ZIP Archive"
                     Write-Host "  [2] Restore Settings from ZIP Archive"
                     Write-Host "  ---" -ForegroundColor DarkGray
@@ -195,11 +186,7 @@ else {
             }
             "3" {
                 while ($true) {
-                    Clear-Host
-                    Write-Host "==================================================" -ForegroundColor Magenta
-                    Write-Host "           Configuration & Automation             " -ForegroundColor Magenta
-                    Write-Host "==================================================" -ForegroundColor Magenta
-                    Write-Host ""
+                    Show-MenuHeader -Title "Configuration & Automation"
                     Write-Host "  [1] Scan and Audit Local Settings"
                     Write-Host "  [2] Manage Scheduled Task"
                     Write-Host "  [3] Edit Backup Settings (Retention & Encryption)"
@@ -264,11 +251,7 @@ else {
                             $gfsW = $mergedCfg.backup.gfsRetention.weeklies
                             $gfsM = $mergedCfg.backup.gfsRetention.monthlies
                             
-                            Clear-Host
-                            Write-Host "==================================================" -ForegroundColor Magenta
-                            Write-Host "               Backup Settings                    " -ForegroundColor Magenta
-                            Write-Host "==================================================" -ForegroundColor Magenta
-                            Write-Host ""
+                            Show-MenuHeader -Title "Backup Settings"
                             Write-Host "  [1] Toggle Retention Mode (Current: $retMode)"
                             if ($retMode -eq 'simple') {
                                 Write-Host "  [2] Set Simple Retention Count (Current: $simpleCount)"
@@ -383,8 +366,8 @@ else {
                                             Where-Object { $_.Name -match '^migratron-store-\d{8}-\d{6}(\.zip)?$' }).Count
                                         if ($backupsCount -gt 0) {
                                             Write-Host ""
-                                            Write-Host "WARNING: You currently have $backupsCount backups." -ForegroundColor Yellow
-                                            Write-Host "Lowering GFS limits may permanently delete older tiered snapshots on the next run!" -ForegroundColor Red
+                                            Write-Host "[!] Warning: You currently have $backupsCount backups." -ForegroundColor Yellow
+                                            Write-Host "[X] Error: Lowering GFS limits may permanently delete older tiered snapshots on the next run!" -ForegroundColor Red
                                             Read-Host "`nPress Enter to acknowledge..."
                                         }
                                     }
@@ -403,19 +386,19 @@ else {
                                         
                                         while ($true) {
                                             $newKey = Read-Host -AsSecureString "Enter encryption key to enable (leave empty to cancel)"
-                                            $plainKey = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto([System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($newKey))
+                                            $plainKey = Convert-SecureStringToPlaintext -SecureString $newKey
                                             
                                             if ([string]::IsNullOrWhiteSpace($plainKey)) {
-                                                Write-Host "No key provided. Encryption will remain disabled." -ForegroundColor Yellow
+                                                Write-Host "[-] Action cancelled. No key provided. Encryption will remain disabled." -ForegroundColor Yellow
                                                 $val = $false
                                                 $localCfg.backup.psobject.Properties.Remove("encryptionKeyEncoded")
                                                 Start-Sleep -Seconds 2
                                                 break
                                             } else {
                                                 $confirmKey = Read-Host -AsSecureString "Confirm encryption key"
-                                                $plainConfirm = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto([System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($confirmKey))
+                                                $plainConfirm = Convert-SecureStringToPlaintext -SecureString $confirmKey
                                                 if ($plainKey -cne $plainConfirm) {
-                                                    Write-Host "Keys do not match. Please try again." -ForegroundColor Red
+                                                    Write-Host "[X] Error: Keys do not match. Please try again." -ForegroundColor Red
                                                     Write-Host ""
                                                     continue
                                                 }
@@ -426,7 +409,7 @@ else {
                                                 } else {
                                                     $localCfg.backup | Add-Member -MemberType NoteProperty -Name "encryptionKey" -Value $plainKey -Force
                                                 }
-                                                Write-Host "Encryption key set successfully." -ForegroundColor Green
+                                                Write-Host "[√] Success: Encryption key set successfully." -ForegroundColor Green
                                                 Start-Sleep -Seconds 1
                                                 break
                                             }
@@ -438,20 +421,20 @@ else {
                             elseif ($keyOpt -ne -1 -and $editChoice -eq "$keyOpt") {
                                 while ($true) {
                                     $newKey = Read-Host -AsSecureString "Enter new encryption key (leave empty to clear/cancel)"
-                                    $plainKey = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto([System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($newKey))
+                                    $plainKey = Convert-SecureStringToPlaintext -SecureString $newKey
                                     if ([string]::IsNullOrWhiteSpace($plainKey)) {
                                         $localCfg.backup.psobject.Properties.Remove("encryptionKey")
                                         $localCfg.backup.psobject.Properties.Remove("encryptionKeyEncoded")
                                         $localCfg.backup | Add-Member -MemberType NoteProperty -Name "encrypt" -Value $false -Force
                                         Set-LocalConfig -ConfigObject $localCfg
-                                        Write-Host "Encryption key cleared and encryption disabled." -ForegroundColor Yellow
+                                        Write-Host "[-] Encryption key cleared and encryption disabled." -ForegroundColor Yellow
                                         Start-Sleep -Seconds 1
                                         break
                                     } else {
                                         $confirmKey = Read-Host -AsSecureString "Confirm new encryption key"
-                                        $plainConfirm = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto([System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($confirmKey))
+                                        $plainConfirm = Convert-SecureStringToPlaintext -SecureString $confirmKey
                                         if ($plainKey -cne $plainConfirm) {
-                                            Write-Host "Keys do not match. Please try again." -ForegroundColor Red
+                                            Write-Host "[X] Error: Keys do not match. Please try again." -ForegroundColor Red
                                             Write-Host ""
                                             continue
                                         }
@@ -463,7 +446,7 @@ else {
                                             $localCfg.backup | Add-Member -MemberType NoteProperty -Name "encryptionKey" -Value $plainKey -Force
                                         }
                                         Set-LocalConfig -ConfigObject $localCfg
-                                        Write-Host "Encryption key updated successfully." -ForegroundColor Green
+                                        Write-Host "[√] Success: Encryption key updated successfully." -ForegroundColor Green
                                         Start-Sleep -Seconds 1
                                         break
                                     }
@@ -473,21 +456,21 @@ else {
                                 $newEncEncoded = -not $encEncoded
                                 
                                 Write-Host ""
-                                Write-Host "Changing key encoding requires re-entering your encryption key." -ForegroundColor Yellow
+                                Write-Host "[!] Warning: Changing key encoding requires re-entering your encryption key." -ForegroundColor Yellow
                                 
                                 while ($true) {
                                     $newKey = Read-Host -AsSecureString "Enter encryption key (leave empty to cancel)"
-                                    $plainKey = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto([System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($newKey))
+                                    $plainKey = Convert-SecureStringToPlaintext -SecureString $newKey
                                     
                                     if ([string]::IsNullOrWhiteSpace($plainKey)) {
-                                        Write-Host "Action cancelled. Encoding unchanged." -ForegroundColor DarkGray
+                                        Write-Host "[-] Action cancelled. Encoding unchanged." -ForegroundColor DarkGray
                                         Start-Sleep -Seconds 1
                                         break
                                     } else {
                                         $confirmKey = Read-Host -AsSecureString "Confirm encryption key"
-                                        $plainConfirm = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto([System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($confirmKey))
+                                        $plainConfirm = Convert-SecureStringToPlaintext -SecureString $confirmKey
                                         if ($plainKey -cne $plainConfirm) {
-                                            Write-Host "Keys do not match. Please try again." -ForegroundColor Red
+                                            Write-Host "[X] Error: Keys do not match. Please try again." -ForegroundColor Red
                                             Write-Host ""
                                             continue
                                         }
@@ -500,7 +483,7 @@ else {
                                             $localCfg.backup | Add-Member -MemberType NoteProperty -Name "encryptionKey" -Value $plainKey -Force
                                         }
                                         Set-LocalConfig -ConfigObject $localCfg
-                                        Write-Host "Encoding toggled and key updated successfully." -ForegroundColor Green
+                                        Write-Host "[√] Success: Encoding toggled and key updated successfully." -ForegroundColor Green
                                         Start-Sleep -Seconds 1
                                         break
                                     }
@@ -509,13 +492,13 @@ else {
                             elseif ($testOpt -ne -1 -and $editChoice -eq "$testOpt") {
                                 Write-Host ""
                                 $testKey = Read-Host -AsSecureString "Enter current encryption key to verify"
-                                $plainTest = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto([System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($testKey))
+                                $plainTest = Convert-SecureStringToPlaintext -SecureString $testKey
                                 
                                 $storedKey = $localCfg.backup.encryptionKey
                                 if ($encEncoded) {
                                     try {
                                         $secureStored = ConvertTo-SecureString $storedKey
-                                        $plainStored = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto([System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureStored))
+                                        $plainStored = Convert-SecureStringToPlaintext -SecureString $secureStored
                                     } catch {
                                         $plainStored = $null
                                     }
@@ -525,9 +508,9 @@ else {
                                 
                                 Write-Host ""
                                 if (-not [string]::IsNullOrEmpty($plainTest) -and $plainTest -ceq $plainStored) {
-                                    Write-Host "Success: The encryption key matches the stored value." -ForegroundColor Green
+                                    Write-Host "[√] Success: The encryption key matches the stored value." -ForegroundColor Green
                                 } else {
-                                    Write-Host "Error: The encryption key DOES NOT match the stored value." -ForegroundColor Red
+                                    Write-Host "[X] Error: The encryption key DOES NOT match the stored value." -ForegroundColor Red
                                 }
                                 Read-Host "`nPress Enter to continue..."
                             }
