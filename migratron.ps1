@@ -379,12 +379,8 @@ else {
                                 }
                             }
                             elseif ($editChoice -eq "3") {
-                                $newEnc = Read-Host "Enable encryption? (y/n, or empty to clear override)"
-                                if ([string]::IsNullOrWhiteSpace($newEnc)) {
-                                    $localCfg.backup.psobject.Properties.Remove("encrypt")
-                                } else {
-                                    $val = if ($newEnc -match '^y') { $true } else { $false }
-                                    if ($val -and $hasKey -ne "Yes") {
+                                $val = -not $enc
+                                if ($val -and $hasKey -ne "Yes") {
                                         while ($true) {
                                             $newKey = Read-Host -AsSecureString "Enter encryption key to enable (leave empty to cancel)"
                                             $plainKey = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto([System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($newKey))
@@ -416,7 +412,6 @@ else {
                                         }
                                     }
                                     $localCfg.backup | Add-Member -MemberType NoteProperty -Name "encrypt" -Value $val -Force
-                                }
                                 Set-LocalConfig -ConfigObject $localCfg
                             }
                             elseif ($keyOpt -ne -1 -and $editChoice -eq "$keyOpt") {
