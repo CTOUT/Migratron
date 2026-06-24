@@ -229,10 +229,11 @@ else {
                             }
                             $params = @{ Register = $true; Time = $timeVal; TriggerType = $trigger }
                             & (Join-Path $ScriptDir "schedule-task.ps1") @params
+                            Read-Host "`nPress Enter to return to menu..."
                         } elseif ($taskChoice -eq "2") {
                             & (Join-Path $ScriptDir "schedule-task.ps1") -Unregister
+                            Read-Host "`nPress Enter to return to menu..."
                         }
-                        Read-Host "`nPress Enter to return to menu..."
                     }
                     elseif ($cfgChoice -eq "3") {
                         while ($true) {
