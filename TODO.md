@@ -24,6 +24,7 @@ Tracked work items for Migratron. Items are moved from here to `CHANGELOG.md` wh
 - [x] **Interactive CLI Enhancements** — Add more configuration options to the interactive CLI menu (`migratron.ps1`). Allow users to actively toggle backup retention types (Simple vs GFS), toggle encryption on/off, and manually type in the encryption key directly from the dashboard. Added a global `[Q] Quit` hotkey.
 - [x] **Encoded Encryption Keys** — Support encoding the `encryptionKey` in `usmt-config.local.json` (e.g. using Base64 or DPAPI) so the password is not stored in plaintext on disk. Implement an `encryptionKeyEncoded: true/false` parameter to allow users to specify the format.
 - [x] **Automatic Version Bump** — Script `update-version.ps1` updates `migratron.ps1` and `CHANGELOG.md` with the next semantic version before publishing. Bump script must be updated manually to update the next version number (but can be used to update existing release tags).
+- [x] **USMT Custom XML Generator & Discovery Wizard** — Created interactive utilities (`discover-appdata.ps1` and `manage-paths.ps1`) to discover, manage, and configure rules inside the USMT XML files. Automatically translates AppData locations into USMT CSIDL paths and excludes bloated caches dynamically.
 
 ---
 
@@ -31,6 +32,5 @@ Tracked work items for Migratron. Items are moved from here to `CHANGELOG.md` wh
 
 - [ ] **OneDrive Sync Verification** — Check the local OneDrive sync status (using status attributes or querying client state) before completing the backup operation, ensuring the upload is in progress or completed.
 - [ ] **Smart Service Layer (Windows Service)** — Create a lightweight background service wrapping the toolkit to monitor idle times, shutdown/logoff hooks, and orchestrate point-in-time snapshots intelligently.
-- [ ] **USMT Custom XML Generator** — Create a utility to customise the rules inside the USMT XML files (excluding/including specific files, directories, or registry subkeys easily).
 - [ ] **GitHub Actions Release Workflow** — Automates building the toolkit, creating a ZIP release archive, and attaching it to a new GitHub release with release notes.
 - [ ] **Full-Archive Encryption** — Explore using `7-Zip` (`7z.exe`) or native methods to password-protect the entire output `.zip` wrapper (including manifests, configs, and logs) to prevent metadata leakage. Option should be in addition to the existing encryption configuration.

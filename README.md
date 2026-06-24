@@ -183,9 +183,16 @@ To prevent backing up gigabytes of unnecessary data (like games, caches, or soft
    - Security configurations like `"encryptionKey"` and `"encryptionKeyEncoded"` (which securely stores your password via Windows DPAPI hardware encryption) are strictly isolated to this local file.
 3. **Backup Audit Trail**: Every successful snapshot packages a copy of the active XML configuration manifests in a `USMT-XML/` subdirectory within the backup store directory, ensuring you always know what rules were applied.
 
+### AppData Discovery & Custom Paths
+
+Migratron includes interactive wizards to help you securely discover and manage your custom inclusions (`usmt-config.local.json`):
+
+- **Discovery Wizard** (`[5] Discover & Add Custom AppData`): Scans your local `AppData` and `Saved Games` folders, automatically recommending configurations to include while aggressively filtering out GBs of caches, temp files, and node modules.
+- **Path Management Wizard** (`[6] Manage Included Custom Paths`): Review your explicit inclusions list in an alphabetised UI and surgically prune items using a multi-select interface.
+
 ### Secondary Drive Audit
 
-The **Scan & Audit** option ([1] in the menu) automatically detects all fixed drives present on your machine (excluding the system drive) and warns you about any that are not listed in `excludePaths`. This helps ensure you don't accidentally capture data from a games library, second data drive, or cloud sync cache.
+The **Scan & Audit** option (`[1]` in the menu) automatically detects all fixed drives present on your machine (excluding the system drive) and warns you about any that are not listed in `excludePaths`. This helps ensure you don't accidentally capture data from a games library, second data drive, or cloud sync cache.
 
 ---
 
