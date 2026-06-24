@@ -218,18 +218,23 @@ else {
                     Write-Host "  [2] Manage Scheduled Task"
                     Write-Host "  [3] Edit Backup Settings (Retention & Encryption)"
                     Write-Host "  [4] Set Backup Output Directory"
+                    Write-Host "  [5] Discover & Add Custom AppData / Game Saves"
                     Write-Host "  ---" -ForegroundColor DarkGray
                     Write-Host "  [M] Back to Main Menu"
                     Write-Host "  [Q] Quit"
                     Write-Host ""
                     
-                    $cfgChoice = Read-Host "Select an option [1-4, M, Q]"
+                    $cfgChoice = Read-Host "Select an option [1-5, M, Q]"
                     if ($cfgChoice -match '^[qQ]$') { return }
                     elseif ($cfgChoice -match '^[mM]$') { continue MainMenu }
                     elseif ($cfgChoice -eq "1") {
                         Write-Host ""
                         & (Join-Path $ScriptDir "scan-system.ps1")
                         Read-Host "`nPress Enter to return to menu..."
+                    }
+                    elseif ($cfgChoice -eq "5") {
+                        Write-Host ""
+                        & (Join-Path $ScriptDir "discover-appdata.ps1")
                     }
                     elseif ($cfgChoice -eq "2") {
                         Write-Host ""
