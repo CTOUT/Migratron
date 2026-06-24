@@ -27,12 +27,17 @@ foreach ($path in $scanPaths) {
         # Skip junctions/symlinks (like folders manually redirected to OneDrive)
         if ($dir.Attributes -match 'ReparsePoint') { continue }
         
-        # Calculate folder size
+        # Calculate folder size and find config extensions
         $sizeBytes = 0
+        $hasConfigExt = $false
         try {
             $files = Get-ChildItem -Path $dir.FullName -Recurse -File -Force -ErrorAction SilentlyContinue
             if ($files) {
                 $sizeBytes = ($files | Measure-Object -Property Length -Sum).Sum
+                $exts = $files.Extension | Select-Object -Unique
+                if ($exts -match '(?i)^\.(json|cfg|ini|xml|yml|yaml)$') {
+                    $hasConfigExt = $true
+                }
             }
         } catch {}
         
@@ -54,10 +59,17 @@ foreach ($path in $scanPaths) {
         elseif ($path -eq $env:LOCALAPPDATA) { $baseType = "Local" }
         elseif ($path -match "LocalLow") { $baseType = "LocalLow" }
 
+        $nameMatch = ($dir.Name -match '(?i)^(save|conf|setting)')
+
         $rec = ""
-        if ($sizeBytes -lt 250MB) { $rec = "[OK]" }
-        elseif ($sizeBytes -gt 1GB) { $rec = "[HEAVY]" }
-        else { $rec = "[-]" }
+        if ($nameMatch -or $hasConfigExt -or $baseType -eq "Saved Games") {
+            if ($sizeBytes -gt 1GB) { $rec = "[HEAVY]" }
+            else { $rec = "[OK]" }
+        } else {
+            if ($sizeBytes -lt 250MB) { $rec = "[OK]" }
+            elseif ($sizeBytes -gt 1GB) { $rec = "[HEAVY]" }
+            else { $rec = "[-]" }
+        }
 
         $candidates.Add([pscustomobject]@{
             Id = 0
