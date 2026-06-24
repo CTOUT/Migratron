@@ -287,6 +287,23 @@ else {
                                     $localCfg.backup | Add-Member -MemberType NoteProperty -Name "retentionMode" -Value $newMode -Force
                                 }
                                 Set-LocalConfig -ConfigObject $localCfg
+                                
+                                $tempCfg = Get-UsmtConfig
+                                if ($tempCfg.backup.retentionMode -eq 'simple') {
+                                    $retLimit = $tempCfg.backup.retentionCount
+                                    $outDir = Resolve-PathVariables -Path $tempCfg.backup.outputDir
+                                    if (Test-Path $outDir) {
+                                        $backupsCount = @(Get-ChildItem -Path $outDir -Filter "migratron-store-*" | 
+                                            Where-Object { $_.Name -match '^migratron-store-\d{8}-\d{6}(\.zip)?$' }).Count
+                                        if ($retLimit -gt 0 -and $backupsCount -gt $retLimit) {
+                                            $diff = $backupsCount - $retLimit + 1
+                                            Write-Host ""
+                                            Write-Host "WARNING: You currently have $backupsCount backups." -ForegroundColor Yellow
+                                            Write-Host "With a simple limit of $retLimit, the next backup will PERMANENTLY DELETE your $diff oldest snapshot(s)!" -ForegroundColor Red
+                                            Read-Host "`nPress Enter to acknowledge..."
+                                        }
+                                    }
+                                }
                             }
                             elseif ($editChoice -eq "2") {
                                 if ($retMode -eq 'simple') {
@@ -295,6 +312,22 @@ else {
                                         $localCfg.backup.psobject.Properties.Remove("retentionCount")
                                     } elseif ($val -match '^\d+$') {
                                         $localCfg.backup | Add-Member -MemberType NoteProperty -Name "retentionCount" -Value [int]$val -Force
+                                    }
+                                    Set-LocalConfig -ConfigObject $localCfg
+                                    
+                                    $tempCfg = Get-UsmtConfig
+                                    $retLimit = $tempCfg.backup.retentionCount
+                                    $outDir = Resolve-PathVariables -Path $tempCfg.backup.outputDir
+                                    if (Test-Path $outDir) {
+                                        $backupsCount = @(Get-ChildItem -Path $outDir -Filter "migratron-store-*" | 
+                                            Where-Object { $_.Name -match '^migratron-store-\d{8}-\d{6}(\.zip)?$' }).Count
+                                        if ($retLimit -gt 0 -and $backupsCount -gt $retLimit) {
+                                            $diff = $backupsCount - $retLimit + 1
+                                            Write-Host ""
+                                            Write-Host "WARNING: You currently have $backupsCount backups." -ForegroundColor Yellow
+                                            Write-Host "With a simple limit of $retLimit, the next backup will PERMANENTLY DELETE your $diff oldest snapshot(s)!" -ForegroundColor Red
+                                            Read-Host "`nPress Enter to acknowledge..."
+                                        }
                                     }
                                 } else {
                                     Write-Host "Leave any value empty to skip/clear:" -ForegroundColor DarkGray
@@ -314,8 +347,9 @@ else {
                                     
                                     if ([string]::IsNullOrWhiteSpace($mVal)) { $localCfg.backup.gfsRetention.psobject.Properties.Remove("monthlies") }
                                     elseif ($mVal -match '^\d+$') { $localCfg.backup.gfsRetention | Add-Member -MemberType NoteProperty -Name "monthlies" -Value [int]$mVal -Force }
+                                    
+                                    Set-LocalConfig -ConfigObject $localCfg
                                 }
-                                Set-LocalConfig -ConfigObject $localCfg
                             }
                             elseif ($editChoice -eq "3") {
                                 $newEnc = Read-Host "Enable encryption? (y/n, or empty to clear override)"
