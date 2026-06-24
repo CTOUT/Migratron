@@ -11,7 +11,7 @@ $scanPaths = @(
 )
 
 # Aggressive heuristics to drop caches, built-ins, and generic hardware/software bloat
-$excludePattern = '(?i)^(Microsoft|Packages|Programs|CrashDumps|Temp|Cache|logs?|Temporary Internet Files|Code Cache|GPUCache|Crashpad|NVIDIA.*|AMD|Intel.*|Radeon.*|Dropbox|Zoom|WebEx|Slack|Teams.*|GitHubDesktop|Docker|HammerAI|Vortex.*)$'
+$excludePattern = '(?i)^(Microsoft|Packages|Programs|CrashDumps|Temp|.*cache.*|logs?|Temporary Internet Files|Crashpad|NVIDIA.*|AMD|Intel.*|Radeon.*|Dropbox|Zoom|WebEx|Slack|Teams.*|GitHubDesktop|Docker|HammerAI|Vortex.*)$'
 
 $candidates = [System.Collections.Generic.List[object]]::new()
 
