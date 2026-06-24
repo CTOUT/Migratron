@@ -74,7 +74,7 @@ while ($true) {
                 $newPaths += $paths[$i]
             }
         }
-        $localCfg.backup.includePaths = $newPaths
+        $localCfg.backup.includePaths = $newPaths | Sort-Object
         Set-LocalConfig -ConfigObject $localCfg
         Write-Host "`n[√] Removed $($selectedIndices.Count) paths from configuration!" -ForegroundColor Green
         Start-Sleep -Seconds 1

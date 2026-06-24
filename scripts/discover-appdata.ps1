@@ -210,7 +210,7 @@ foreach ($path in $pathsToAdd) {
 }
 
 if ($addedCount -gt 0) {
-    $localCfg.backup.includePaths = $currentIncludes
+    $localCfg.backup.includePaths = $currentIncludes | Sort-Object
     Set-LocalConfig -ConfigObject $localCfg
     Write-Host "`n[√] Success: Added $addedCount folder(s) to your includePaths!" -ForegroundColor Green
 } else {
