@@ -90,8 +90,8 @@ $baseArgList = @(
     "/l:`"$logFile`""
 )
 
-# Loop to allow password fallback
-$maxAttempts = 3
+# Allow 1 automatic attempt + 1 manual fallback attempt
+$maxAttempts = 2
 $attempt = 0
 $success = $false
 
