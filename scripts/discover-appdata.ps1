@@ -10,8 +10,8 @@ $scanPaths = @(
     (Join-Path $env:USERPROFILE "Saved Games")
 )
 
-# Aggressive heuristics to drop caches and built-ins
-$excludePattern = '(?i)^(Microsoft|Packages|CrashDumps|Temp|Cache|logs?|Temporary Internet Files|Code Cache|GPUCache|Crashpad)$'
+# Aggressive heuristics to drop caches, built-ins, and generic hardware/software bloat
+$excludePattern = '(?i)^(Microsoft|Packages|CrashDumps|Temp|Cache|logs?|Temporary Internet Files|Code Cache|GPUCache|Crashpad|NVIDIA.*|AMD|Intel.*|Radeon.*|Dropbox|Zoom|WebEx|Slack|Teams.*|GitHubDesktop|Docker)$'
 
 $candidates = [System.Collections.Generic.List[object]]::new()
 
@@ -54,6 +54,11 @@ foreach ($path in $scanPaths) {
         elseif ($path -eq $env:LOCALAPPDATA) { $baseType = "Local" }
         elseif ($path -match "LocalLow") { $baseType = "LocalLow" }
 
+        $rec = ""
+        if ($sizeBytes -lt 250MB) { $rec = "[OK]" }
+        elseif ($sizeBytes -gt 1GB) { $rec = "[HEAVY]" }
+        else { $rec = "[-]" }
+
         $candidates.Add([pscustomobject]@{
             Id = 0
             Name = $dir.Name
@@ -62,6 +67,7 @@ foreach ($path in $scanPaths) {
             SizeBytes = $sizeBytes
             FormatSize = Get-FormatSize -Bytes $sizeBytes
             BaseType = $baseType
+            Rec = $rec
         })
     }
 }
@@ -80,15 +86,23 @@ for ($i = 0; $i -lt $sortedCandidates.Count; $i++) {
 }
 
 Show-MenuHeader -Title "Discovered Configuration Folders"
-Write-Host " ID | Type       | Size       | Name / Path" -ForegroundColor Cyan
-Write-Host "----|------------|------------|-------------------------------------------"
+Write-Host " ID | Rec     | Type       | Size       | Name / Path" -ForegroundColor Cyan
+Write-Host "----|---------|------------|------------|-------------------------------------------"
 foreach ($item in $sortedCandidates) {
     $idPad = $item.Id.ToString().PadLeft(2)
+    $recPad = $item.Rec.PadRight(7)
     $typePad = $item.BaseType.PadRight(10)
     $sizePad = $item.FormatSize.PadRight(10)
-    Write-Host " $idPad | $typePad | $sizePad | $($item.VarPath)"
+    
+    if ($item.Rec -eq "[HEAVY]") {
+        Write-Host " $idPad | $recPad | $typePad | $sizePad | $($item.VarPath)" -ForegroundColor Red
+    } elseif ($item.Rec -eq "[OK]") {
+        Write-Host " $idPad | $recPad | $typePad | $sizePad | $($item.VarPath)" -ForegroundColor Green
+    } else {
+        Write-Host " $idPad | $recPad | $typePad | $sizePad | $($item.VarPath)"
+    }
 }
-Write-Host "----|------------|------------|-------------------------------------------"
+Write-Host "----|---------|------------|------------|-------------------------------------------"
 
 Write-Host "`nInstructions:" -ForegroundColor Yellow
 Write-Host " - Enter the IDs of folders you wish to backup, separated by commas (e.g. '1, 4, 7')"

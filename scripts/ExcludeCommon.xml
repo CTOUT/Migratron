@@ -22,6 +22,16 @@
             <pattern type="File">C:\Users\*\AppData\Local\Microsoft\Office\*\*\*Rules\* [*]</pattern>
             <pattern type="File">C:\Users\*\AppData\Local\Microsoft\Office\*\*\*Rules\** [*]</pattern>
             
+            <!-- Exclude generic application caches (Electron, Chromium, etc.) -->
+            <pattern type="File">C:\Users\*\AppData\*\*\Cache\* [*]</pattern>
+            <pattern type="File">C:\Users\*\AppData\*\*\Cache\** [*]</pattern>
+            <pattern type="File">C:\Users\*\AppData\*\*\Code Cache\* [*]</pattern>
+            <pattern type="File">C:\Users\*\AppData\*\*\Code Cache\** [*]</pattern>
+            <pattern type="File">C:\Users\*\AppData\*\*\GPUCache\* [*]</pattern>
+            <pattern type="File">C:\Users\*\AppData\*\*\GPUCache\** [*]</pattern>
+            <pattern type="File">C:\Users\*\AppData\*\*\Crashpad\* [*]</pattern>
+            <pattern type="File">C:\Users\*\AppData\*\*\Crashpad\** [*]</pattern>
+            
             <!-- Exclude Windows Defender scan history, signatures, and binaries -->
             <pattern type="File">C:\ProgramData\Microsoft\Windows Defender\* [*]</pattern>
             <pattern type="File">C:\ProgramData\Microsoft\Windows Defender\** [*]</pattern>
