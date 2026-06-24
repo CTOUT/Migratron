@@ -123,45 +123,70 @@ for ($i = 0; $i -lt $sortedCandidates.Count; $i++) {
     $sortedCandidates[$i].Id = $i + 1
 }
 
-Show-MenuHeader -Title "Discovered Configuration Folders"
-Write-Host " ID | Rec     | Type       | Size (Raw) | Size (Net) | Name / Path" -ForegroundColor Cyan
-Write-Host "----|---------|------------|------------|------------|-------------------------------------------"
-foreach ($item in $sortedCandidates) {
-    $idPad = $item.Id.ToString().PadLeft(2)
-    $recPad = $item.Rec.PadRight(7)
-    $typePad = $item.BaseType.PadRight(10)
-    $sizePad = $item.FormatSize.PadRight(10)
-    $filtPad = $item.FormatFilteredSize.PadRight(10)
-    
-    if ($item.Rec -eq "[HEAVY]") {
-        Write-Host " $idPad | $recPad | $typePad | $sizePad | $filtPad | $($item.VarPath)" -ForegroundColor Red
-    } elseif ($item.Rec -eq "[OK]") {
-        Write-Host " $idPad | $recPad | $typePad | $sizePad | $filtPad | $($item.VarPath)" -ForegroundColor Green
-    } else {
-        Write-Host " $idPad | $recPad | $typePad | $sizePad | $filtPad | $($item.VarPath)"
-    }
-}
-Write-Host "----|---------|------------|------------|------------|-------------------------------------------"
-# Load existing config upfront
-$localCfg = Get-LocalConfig
-if ($null -eq $localCfg.psobject.Properties['backup']) {
-    $localCfg | Add-Member -MemberType NoteProperty -Name "backup" -Value (New-Object PSObject)
-}
-if ($null -eq $localCfg.backup.psobject.Properties['includePaths']) {
-    $localCfg.backup | Add-Member -MemberType NoteProperty -Name "includePaths" -Value @()
-}
-if ($null -eq $localCfg.backup.psobject.Properties['excludePaths']) {
-    $localCfg.backup | Add-Member -MemberType NoteProperty -Name "excludePaths" -Value @()
-}
-
-Write-Host "`nInstructions:" -ForegroundColor Yellow
-Write-Host " - To INCLUDE folders, type 'i' followed by IDs (e.g. 'i 1, 4, 7-10')"
-Write-Host " - To EXCLUDE folders, type 'e' followed by IDs (e.g. 'e 2, 5')"
-Write-Host " - To REMOVE folders from all lists, type 'r' followed by IDs (e.g. 'r 3')"
-Write-Host " - Without a prefix, IDs will be INCLUDED by default."
-Write-Host " - Press Enter (empty line) when you are finished."
+$lastActionMessage = ""
 
 while ($true) {
+    Clear-Host
+
+    # Load existing config dynamically for each redraw
+    $localCfg = Get-LocalConfig
+    if ($null -eq $localCfg.psobject.Properties['backup']) {
+        $localCfg | Add-Member -MemberType NoteProperty -Name "backup" -Value (New-Object PSObject)
+    }
+    if ($null -eq $localCfg.backup.psobject.Properties['includePaths']) {
+        $localCfg.backup | Add-Member -MemberType NoteProperty -Name "includePaths" -Value @()
+    }
+    if ($null -eq $localCfg.backup.psobject.Properties['excludePaths']) {
+        $localCfg.backup | Add-Member -MemberType NoteProperty -Name "excludePaths" -Value @()
+    }
+
+    $currentIncludes = @($localCfg.backup.includePaths)
+    $currentExcludes = @($localCfg.backup.excludePaths)
+
+    Show-MenuHeader -Title "Discovered Configuration Folders"
+    Write-Host " ID | Rec     | Status | Type       | Size (Raw) | Size (Net) | Name / Path" -ForegroundColor Cyan
+    Write-Host "----|---------|--------|------------|------------|------------|-------------------------------------------"
+    foreach ($item in $sortedCandidates) {
+        $idPad = $item.Id.ToString().PadLeft(2)
+        $recPad = $item.Rec.PadRight(7)
+        $typePad = $item.BaseType.PadRight(10)
+        $sizePad = $item.FormatSize.PadRight(10)
+        $filtPad = $item.FormatFilteredSize.PadRight(10)
+        
+        $statusStr = "[ - ]"
+        $statusColor = "DarkGray"
+        if ($currentIncludes -contains $item.VarPath) {
+            $statusStr = "[INC]"
+            $statusColor = "Green"
+        } elseif ($currentExcludes -contains $item.VarPath) {
+            $statusStr = "[EXC]"
+            $statusColor = "Red"
+        }
+        $statPad = $statusStr.PadRight(6)
+
+        Write-Host -NoNewline " $idPad | "
+        if ($item.Rec -eq "[HEAVY]") { Write-Host -NoNewline "$recPad" -ForegroundColor Red }
+        elseif ($item.Rec -eq "[OK]") { Write-Host -NoNewline "$recPad" -ForegroundColor Green }
+        else { Write-Host -NoNewline "$recPad" }
+        
+        Write-Host -NoNewline " | "
+        Write-Host -NoNewline "$statPad" -ForegroundColor $statusColor
+        Write-Host " | $typePad | $sizePad | $filtPad | $($item.VarPath)"
+    }
+    Write-Host "----|---------|--------|------------|------------|------------|-------------------------------------------"
+
+    if ($lastActionMessage) {
+        Write-Host "`n$lastActionMessage" -ForegroundColor Green
+        $lastActionMessage = ""
+    }
+
+    Write-Host "`nInstructions:" -ForegroundColor Yellow
+    Write-Host " - To INCLUDE folders, type 'i' followed by IDs (e.g. 'i 1, 4, 7-10')"
+    Write-Host " - To EXCLUDE folders, type 'e' followed by IDs (e.g. 'e 2, 5')"
+    Write-Host " - To REMOVE folders from all lists, type 'r' followed by IDs (e.g. 'r 3')"
+    Write-Host " - Without a prefix, IDs will be INCLUDED by default."
+    Write-Host " - Press Enter (empty line) when you are finished."
+
     $selection = Read-Host "`nEnter selection [i, e, r, or empty]"
 
     if ([string]::IsNullOrWhiteSpace($selection)) {
@@ -211,12 +236,10 @@ while ($true) {
     }
 
     if ($pathsToAdd.Count -eq 0) {
-        Write-Host "[-] No valid folders selected. Try again." -ForegroundColor Yellow
+        $lastActionMessage = "[-] No valid folders selected. Try again."
         continue
     }
 
-    $currentIncludes = @($localCfg.backup.includePaths)
-    $currentExcludes = @($localCfg.backup.excludePaths)
     $addedCount = 0
 
     if ($action -eq "include") {
@@ -230,7 +253,7 @@ while ($true) {
         $localCfg.backup.includePaths = $currentIncludes | Sort-Object -Unique
         $localCfg.backup.excludePaths = $currentExcludes | Sort-Object -Unique
         Set-LocalConfig -ConfigObject $localCfg
-        Write-Host "[√] Added $addedCount folder(s) to INCLUSIONS!" -ForegroundColor Green
+        $lastActionMessage = "[√] Added $addedCount folder(s) to INCLUSIONS!"
     } elseif ($action -eq "exclude") {
         foreach ($path in $pathsToAdd) {
             if ($currentExcludes -notcontains $path) {
@@ -242,7 +265,7 @@ while ($true) {
         $localCfg.backup.includePaths = $currentIncludes | Sort-Object -Unique
         $localCfg.backup.excludePaths = $currentExcludes | Sort-Object -Unique
         Set-LocalConfig -ConfigObject $localCfg
-        Write-Host "[√] Added $addedCount folder(s) to EXCLUSIONS!" -ForegroundColor Green
+        $lastActionMessage = "[√] Added $addedCount folder(s) to EXCLUSIONS!"
     } elseif ($action -eq "remove") {
         $removedCount = 0
         foreach ($path in $pathsToAdd) {
@@ -255,6 +278,6 @@ while ($true) {
         $localCfg.backup.includePaths = $currentIncludes | Sort-Object -Unique
         $localCfg.backup.excludePaths = $currentExcludes | Sort-Object -Unique
         Set-LocalConfig -ConfigObject $localCfg
-        Write-Host "[√] Removed $removedCount folder(s) from both lists!" -ForegroundColor Green
+        $lastActionMessage = "[√] Removed $removedCount folder(s) from both lists!"
     }
 }
