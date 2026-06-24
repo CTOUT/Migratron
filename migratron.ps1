@@ -180,20 +180,28 @@ else {
                         Read-Host "`nPress Enter to return to menu..."
                     }
                     elseif ($opChoice -eq "3") {
-                        Write-Host ""
-                        Assert-AdminPrivileges -CallerBoundParameters $PSBoundParameters
-                        $path = Get-BackupSelection -ConfigPath (Join-Path $ScriptDir "usmt-config.json")
-                        if ([string]::IsNullOrEmpty($path) -or -not (Test-Path $path)) {
-                            if (-not [string]::IsNullOrEmpty($path)) { Log "Backup file not found at: '$path'" 'ERROR' }
-                            Read-Host "`nPress Enter to return to menu..."
-                            continue
+                        while ($true) {
+                            Write-Host ""
+                            Assert-AdminPrivileges -CallerBoundParameters $PSBoundParameters
+                            $path = Get-BackupSelection -ConfigPath (Join-Path $ScriptDir "usmt-config.json")
+                            if ([string]::IsNullOrEmpty($path) -or -not (Test-Path $path)) {
+                                if (-not [string]::IsNullOrEmpty($path)) {
+                                    Log "Backup file not found at: '$path'" 'ERROR'
+                                    Read-Host "`nPress Enter to try again..."
+                                    continue
+                                }
+                                break
+                            }
+                            $dry = Read-Host "Dry run (simulate verify)? [y/N]"
+                            $drySwitch = if ($dry -like "y*") { $true } else { $false }
+                            $params = @{ BackupPath = $path }
+                            if ($drySwitch) { $params["DryRun"] = $true }
+                            & (Join-Path $ScriptDir "verify-backup.ps1") @params
+                            
+                            Write-Host ""
+                            $verifyAgain = Read-Host "Do you want to verify another backup? [y/N]"
+                            if ($verifyAgain -notlike "y*") { break }
                         }
-                        $dry = Read-Host "Dry run (simulate verify)? [y/N]"
-                        $drySwitch = if ($dry -like "y*") { $true } else { $false }
-                        $params = @{ BackupPath = $path }
-                        if ($drySwitch) { $params["DryRun"] = $true }
-                        & (Join-Path $ScriptDir "verify-backup.ps1") @params
-                        Read-Host "`nPress Enter to return to menu..."
                     }
                 }
             }
