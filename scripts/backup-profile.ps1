@@ -122,7 +122,7 @@ if ($config.backup.includePaths -and $config.backup.includePaths.Count -gt 0) {
         '    <displayName>Custom Inclusions</displayName>',
         '    <role role="Data">',
         '      <rules>',
-        '        <unconditionalInclude>',
+        '        <include>',
         '          <objectSet>'
     )
     foreach ($path in $config.backup.includePaths) {
@@ -147,7 +147,7 @@ if ($config.backup.includePaths -and $config.backup.includePaths.Count -gt 0) {
     }
     $xmlLines += @(
         '          </objectSet>',
-        '        </unconditionalInclude>',
+        '        </include>',
         '      </rules>',
         '    </role>',
         '  </component>',
