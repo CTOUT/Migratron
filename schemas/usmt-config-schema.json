@@ -50,7 +50,11 @@
         },
         "encrypt": {
           "type": "BOOLEAN",
-          "description": "Enable encryption for backup archives (planned)"
+          "description": "Enable USMT AES-256 encryption for backup archives"
+        },
+        "encryptionKey": {
+          "type": "STRING",
+          "description": "Password used for AES-256 encryption. Recommended to store this in usmt-config.local.json to prevent committing to source control."
         },
         "generateManifest": {
           "type": "BOOLEAN",

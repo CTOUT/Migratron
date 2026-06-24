@@ -21,8 +21,22 @@ if ($null -eq $usmtPath) {
     return
 }
 
+$tempKeyFile = $null
+
 # --- FIX #6: Warn when encryption is disabled ---
-if (-not $config.backup.encrypt) {
+if ($config.backup.encrypt) {
+    $encryptionKey = $config.backup.encryptionKey
+    if ([string]::IsNullOrWhiteSpace($encryptionKey)) {
+        Log "Backup encryption is enabled ('encrypt: true') but 'encryptionKey' is empty!" 'ERROR'
+        Log "Please define 'encryptionKey' in your usmt-config.local.json file." 'ERROR'
+        return
+    }
+    # Write the key to a highly restricted temp file
+    $tempKeyFile = Join-Path $env:TEMP "migratron-key-$timestamp.txt"
+    $encryptionKey | Out-File -FilePath $tempKeyFile -Encoding utf8 -Force
+    Log "Encryption enabled. Key securely piped to temporary keyfile." 'SUCCESS'
+}
+else {
     Log "WARNING: Backup encryption is disabled ('encrypt: false' in config). USMT stores contain sensitive user data." 'WARN'
     Log "         Consider enabling encryption or storing backups on encrypted drives (e.g. BitLocker)." 'WARN'
 }
@@ -165,6 +179,12 @@ $argList = @(
     "/o",
     "/l:`"$logFile`""
 )
+
+if ($tempKeyFile -and (Test-Path $tempKeyFile)) {
+    $argList += "/encrypt"
+    $argList += "/encrypt:AES_256"
+    $argList += "/keyfile:`"$tempKeyFile`""
+}
 
 if ($null -ne $config.backup.generateManifest -and $config.backup.generateManifest) {
     if ($config.backup.compress) {
@@ -428,6 +448,12 @@ finally {
     if (Test-Path $StagingStore) {
         Log "Cleaning up staging directory: $StagingStore" 'DEBUG'
         Remove-Item -Path $StagingStore -Recurse -Force -ErrorAction SilentlyContinue | Out-Null
+    }
+    
+    # Shred temp key file securely
+    if ($null -ne $tempKeyFile -and (Test-Path $tempKeyFile)) {
+        Log "Shredding temporary encryption key file..." 'DEBUG'
+        Remove-Item -Path $tempKeyFile -Force -ErrorAction SilentlyContinue | Out-Null
     }
     # Clean up loose log if process failed
     if (Test-Path $logFile) {

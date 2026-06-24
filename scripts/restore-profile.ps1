@@ -116,6 +116,31 @@ $argList = @(
     "/l:`"$logFile`""
 )
 
+$tempKeyFile = $null
+
+if ($config.backup.encrypt) {
+    $encryptionKey = $config.backup.encryptionKey
+    if ([string]::IsNullOrWhiteSpace($encryptionKey)) {
+        Log "Encryption is enabled, but no key was found in the configuration." 'WARN'
+        $secPwd = Read-Host "Enter the AES-256 decryption password for this backup" -AsSecureString
+        $encryptionKey = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto([System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($secPwd))
+        if ([string]::IsNullOrWhiteSpace($encryptionKey)) {
+            Log "Decryption password cannot be empty. Aborting restore." 'ERROR'
+            return
+        }
+    }
+    
+    $tempKeyFile = Join-Path $env:TEMP "migratron-key-$timestamp.txt"
+    $encryptionKey | Out-File -FilePath $tempKeyFile -Encoding utf8 -Force
+    Log "Decryption key securely piped to temporary keyfile." 'SUCCESS'
+}
+
+if ($tempKeyFile -and (Test-Path $tempKeyFile)) {
+    $argList += "/decrypt"
+    $argList += "/decrypt:AES_256"
+    $argList += "/keyfile:`"$tempKeyFile`""
+}
+
 # Append any custom arguments from config
 # --- FIX #3: restrict additionalArgs to a strict allowlist of safe USMT flags ---
 $allowedArgPatterns = @(
@@ -189,6 +214,12 @@ finally {
     if ($isZip -and (Test-Path $StagingDir)) {
         Log "Cleaning up staging directory: $StagingDir" 'DEBUG'
         Remove-Item -Path $StagingDir -Recurse -Force -ErrorAction SilentlyContinue | Out-Null
+    }
+    
+    # Shred temp key file securely
+    if ($null -ne $tempKeyFile -and (Test-Path $tempKeyFile)) {
+        Log "Shredding temporary decryption key file..." 'DEBUG'
+        Remove-Item -Path $tempKeyFile -Force -ErrorAction SilentlyContinue | Out-Null
     }
     # Clean up loose log if process failed
     if (Test-Path $logFile) {

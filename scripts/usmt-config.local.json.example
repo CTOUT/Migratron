@@ -25,6 +25,7 @@
     "outputDir": "$ONEDRIVE\\MigratronBackups",
     "retentionCount": 5,
     "compress": false,
+    "encryptionKey": "",
     "generateManifest": true,
     "excludePaths": [
       "%OneDrive%",
