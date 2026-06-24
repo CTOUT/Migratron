@@ -22,11 +22,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Include Paths Mode (`backup.includePaths`)** — Added explicit local capture paths (e.g., `AppData\LocalLow`) via auto-generated `IncludeCustom.xml` using `<unconditionalInclude>` rules.
 - **Interactive Deletion** — Added `-InteractiveDelete` to `list-backups.ps1`, allowing users to select and delete specific backup folders by number.
 - **Password Confirmation** — Added a continuous matching loop when setting or toggling encryption keys to prevent typos from breaking the configuration.
+- **Key Validation** — Added a `[6] Verify Current Encryption Key` option to the menu (visible when a key is set) allowing users to safely verify their stored key matches their expectations.
+- **Encoding Prompt** — Turning on encryption when no key is set now actively prompts the user to choose their preferred encoding format (Plaintext vs DPAPI) before requesting the password.
 
 ### Changed
+
 - **Immediate Encryption Toggle** — `[3] Toggle Encryption` in the menu now instantly inverts the boolean setting without prompting `y/n`.
 
 ### Fixed
+
 - **Encryption Key Encoding Bugs** — Fixed an issue where PowerShell's `Out-File` injected UTF-8 BOMs and CRLF terminators into the temporary encryption key file, causing USMT decryption verification (Return Code 37) to fail. Now uses `[System.IO.File]::WriteAllText` with `UTF8NoBOM`.
 - **Config Cleanup** — When an encryption key is explicitly cleared, Migratron now ensures that `encryptionKeyEncoded` is also scrubbed from `usmt-config.local.json` and immediately defaults `encrypt` to `$false`.
 
