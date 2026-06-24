@@ -144,11 +144,11 @@ while ($true) {
     $currentIncludes = @($localCfg.backup.includePaths)
     $currentExcludes = @($localCfg.backup.excludePaths)
 
-    # Calculate page size based on terminal height (reserving 14 lines for headers/footers)
+    # Calculate page size based on terminal height (reserving 19 lines for headers/footers/prompts)
     $terminalHeight = 40
     try { $terminalHeight = $Host.UI.RawUI.WindowSize.Height } catch {}
-    $pageSize = $terminalHeight - 14
-    if ($pageSize -lt 10) { $pageSize = 15 } # fallback
+    $pageSize = $terminalHeight - 19
+    if ($pageSize -lt 5) { $pageSize = 10 } # fallback
 
     $totalPages = [math]::Ceiling($sortedCandidates.Count / $pageSize)
     if ($currentPage -ge $totalPages) { $currentPage = [math]::Max(0, $totalPages - 1) }
