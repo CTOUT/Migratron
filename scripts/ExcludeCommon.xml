@@ -9,10 +9,15 @@
             <!-- Exclude Microsoft Office temporary, telemetric, and WebView2 caches -->
             <pattern type="File">C:\Users\*\AppData\Local\Microsoft\Office\*\OfficeFileCache\* [*]</pattern>
             <pattern type="File">C:\Users\*\AppData\Local\Microsoft\Office\*\OfficeFileCache\** [*]</pattern>
-            
             <!-- Exclude the Public profile folder entirely (ROMs, shared libraries) -->
             <pattern type="File">C:\Users\Public\* [*]</pattern>
             <pattern type="File">C:\Users\Public\** [*]</pattern>
+            
+            <!-- Exclude Windows ServiceProfiles (NetworkService, LocalService caches like DeliveryOptimization) -->
+            <pattern type="File">C:\Windows\ServiceProfiles\* [*]</pattern>
+            <pattern type="File">C:\Windows\ServiceProfiles\** [*]</pattern>
+            <pattern type="File">C:\Windows\System32\config\systemprofile\* [*]</pattern>
+            <pattern type="File">C:\Windows\System32\config\systemprofile\** [*]</pattern>
             <pattern type="File">C:\Users\*\AppData\Local\Microsoft\Office\*\*\Wef\* [*]</pattern>
             <pattern type="File">C:\Users\*\AppData\Local\Microsoft\Office\*\*\Wef\** [*]</pattern>
             <pattern type="File">C:\Users\*\AppData\Local\Microsoft\Office\*\*\WebServiceCache\* [*]</pattern>
