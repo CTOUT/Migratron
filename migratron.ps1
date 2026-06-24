@@ -389,32 +389,36 @@ else {
                                 Set-LocalConfig -ConfigObject $localCfg
                             }
                             elseif ($keyOpt -ne -1 -and $editChoice -eq "$keyOpt") {
-                                $newKey = Read-Host -AsSecureString "Enter new encryption key (leave empty to clear)"
-                                $plainKey = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto([System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($newKey))
-                                if ([string]::IsNullOrWhiteSpace($plainKey)) {
-                                    $localCfg.backup.psobject.Properties.Remove("encryptionKey")
-                                    $localCfg.backup | Add-Member -MemberType NoteProperty -Name "encrypt" -Value $false -Force
-                                    Set-LocalConfig -ConfigObject $localCfg
-                                    Write-Host "Encryption key cleared and encryption disabled." -ForegroundColor Yellow
-                                    Start-Sleep -Seconds 1
-                                } else {
-                                    $confirmKey = Read-Host -AsSecureString "Confirm new encryption key"
-                                    $plainConfirm = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto([System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($confirmKey))
-                                    if ($plainKey -cne $plainConfirm) {
-                                        Write-Host "Keys do not match. Action cancelled." -ForegroundColor Red
-                                        Start-Sleep -Seconds 2
-                                        continue
-                                    }
-                                    
-                                    if ($encEncoded) {
-                                        $encodedString = ConvertFrom-SecureString $newKey
-                                        $localCfg.backup | Add-Member -MemberType NoteProperty -Name "encryptionKey" -Value $encodedString -Force
+                                while ($true) {
+                                    $newKey = Read-Host -AsSecureString "Enter new encryption key (leave empty to clear/cancel)"
+                                    $plainKey = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto([System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($newKey))
+                                    if ([string]::IsNullOrWhiteSpace($plainKey)) {
+                                        $localCfg.backup.psobject.Properties.Remove("encryptionKey")
+                                        $localCfg.backup | Add-Member -MemberType NoteProperty -Name "encrypt" -Value $false -Force
+                                        Set-LocalConfig -ConfigObject $localCfg
+                                        Write-Host "Encryption key cleared and encryption disabled." -ForegroundColor Yellow
+                                        Start-Sleep -Seconds 1
+                                        break
                                     } else {
-                                        $localCfg.backup | Add-Member -MemberType NoteProperty -Name "encryptionKey" -Value $plainKey -Force
+                                        $confirmKey = Read-Host -AsSecureString "Confirm new encryption key"
+                                        $plainConfirm = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto([System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($confirmKey))
+                                        if ($plainKey -cne $plainConfirm) {
+                                            Write-Host "Keys do not match. Please try again." -ForegroundColor Red
+                                            Write-Host ""
+                                            continue
+                                        }
+                                        
+                                        if ($encEncoded) {
+                                            $encodedString = ConvertFrom-SecureString $newKey
+                                            $localCfg.backup | Add-Member -MemberType NoteProperty -Name "encryptionKey" -Value $encodedString -Force
+                                        } else {
+                                            $localCfg.backup | Add-Member -MemberType NoteProperty -Name "encryptionKey" -Value $plainKey -Force
+                                        }
+                                        Set-LocalConfig -ConfigObject $localCfg
+                                        Write-Host "Encryption key updated successfully." -ForegroundColor Green
+                                        Start-Sleep -Seconds 1
+                                        break
                                     }
-                                    Set-LocalConfig -ConfigObject $localCfg
-                                    Write-Host "Encryption key updated successfully." -ForegroundColor Green
-                                    Start-Sleep -Seconds 1
                                 }
                             }
                             elseif ($encOpt -ne -1 -and $editChoice -eq "$encOpt") {
@@ -422,31 +426,36 @@ else {
                                 
                                 Write-Host ""
                                 Write-Host "Changing key encoding requires re-entering your encryption key." -ForegroundColor Yellow
-                                $newKey = Read-Host -AsSecureString "Enter encryption key (leave empty to cancel)"
-                                $plainKey = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto([System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($newKey))
                                 
-                                if ([string]::IsNullOrWhiteSpace($plainKey)) {
-                                    Write-Host "Action cancelled. Encoding unchanged." -ForegroundColor DarkGray
-                                    Start-Sleep -Seconds 1
-                                } else {
-                                    $confirmKey = Read-Host -AsSecureString "Confirm encryption key"
-                                    $plainConfirm = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto([System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($confirmKey))
-                                    if ($plainKey -cne $plainConfirm) {
-                                        Write-Host "Keys do not match. Action cancelled." -ForegroundColor Red
-                                        Start-Sleep -Seconds 2
-                                        continue
-                                    }
+                                while ($true) {
+                                    $newKey = Read-Host -AsSecureString "Enter encryption key (leave empty to cancel)"
+                                    $plainKey = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto([System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($newKey))
                                     
-                                    $localCfg.backup | Add-Member -MemberType NoteProperty -Name "encryptionKeyEncoded" -Value $newEncEncoded -Force
-                                    if ($newEncEncoded) {
-                                        $encodedString = ConvertFrom-SecureString $newKey
-                                        $localCfg.backup | Add-Member -MemberType NoteProperty -Name "encryptionKey" -Value $encodedString -Force
+                                    if ([string]::IsNullOrWhiteSpace($plainKey)) {
+                                        Write-Host "Action cancelled. Encoding unchanged." -ForegroundColor DarkGray
+                                        Start-Sleep -Seconds 1
+                                        break
                                     } else {
-                                        $localCfg.backup | Add-Member -MemberType NoteProperty -Name "encryptionKey" -Value $plainKey -Force
+                                        $confirmKey = Read-Host -AsSecureString "Confirm encryption key"
+                                        $plainConfirm = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto([System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($confirmKey))
+                                        if ($plainKey -cne $plainConfirm) {
+                                            Write-Host "Keys do not match. Please try again." -ForegroundColor Red
+                                            Write-Host ""
+                                            continue
+                                        }
+                                        
+                                        $localCfg.backup | Add-Member -MemberType NoteProperty -Name "encryptionKeyEncoded" -Value $newEncEncoded -Force
+                                        if ($newEncEncoded) {
+                                            $encodedString = ConvertFrom-SecureString $newKey
+                                            $localCfg.backup | Add-Member -MemberType NoteProperty -Name "encryptionKey" -Value $encodedString -Force
+                                        } else {
+                                            $localCfg.backup | Add-Member -MemberType NoteProperty -Name "encryptionKey" -Value $plainKey -Force
+                                        }
+                                        Set-LocalConfig -ConfigObject $localCfg
+                                        Write-Host "Encoding toggled and key updated successfully." -ForegroundColor Green
+                                        Start-Sleep -Seconds 1
+                                        break
                                     }
-                                    Set-LocalConfig -ConfigObject $localCfg
-                                    Write-Host "Encoding toggled and key updated successfully." -ForegroundColor Green
-                                    Start-Sleep -Seconds 1
                                 }
                             }
                             elseif ($editChoice -eq "$backOpt") { break }
