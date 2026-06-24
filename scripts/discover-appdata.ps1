@@ -24,6 +24,9 @@ foreach ($path in $scanPaths) {
     foreach ($dir in $dirs) {
         if ($dir.Name -match $excludePattern) { continue }
         
+        # Skip junctions/symlinks (like folders manually redirected to OneDrive)
+        if ($dir.Attributes -match 'ReparsePoint') { continue }
+        
         # Calculate folder size
         $sizeBytes = 0
         try {
