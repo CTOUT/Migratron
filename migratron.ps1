@@ -276,6 +276,7 @@ else {
                             
                             $keyOpt = -1
                             $encOpt = -1
+                            $testOpt = -1
                             $backOpt = 4
                             
                             if ($enc -eq $true) {
@@ -284,6 +285,12 @@ else {
                                 $backOpt = 6
                                 Write-Host "  [$keyOpt] Set Encryption Key (Key Set: $hasKey)"
                                 Write-Host "  [$encOpt] Toggle DPAPI Key Encoding (Current: $encEncoded)"
+                                
+                                if ($hasKey -eq "Yes") {
+                                    $testOpt = 6
+                                    $backOpt = 7
+                                    Write-Host "  [$testOpt] Verify Current Encryption Key"
+                                }
                             }
                             
                             Write-Host "  [$backOpt] Back to Menu"
@@ -493,6 +500,31 @@ else {
                                         break
                                     }
                                 }
+                            }
+                            elseif ($testOpt -ne -1 -and $editChoice -eq "$testOpt") {
+                                Write-Host ""
+                                $testKey = Read-Host -AsSecureString "Enter current encryption key to verify"
+                                $plainTest = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto([System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($testKey))
+                                
+                                $storedKey = $localCfg.backup.encryptionKey
+                                if ($encEncoded) {
+                                    try {
+                                        $secureStored = ConvertTo-SecureString $storedKey
+                                        $plainStored = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto([System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureStored))
+                                    } catch {
+                                        $plainStored = $null
+                                    }
+                                } else {
+                                    $plainStored = $storedKey
+                                }
+                                
+                                Write-Host ""
+                                if (-not [string]::IsNullOrEmpty($plainTest) -and $plainTest -ceq $plainStored) {
+                                    Write-Host "Success: The encryption key matches the stored value." -ForegroundColor Green
+                                } else {
+                                    Write-Host "Error: The encryption key DOES NOT match the stored value." -ForegroundColor Red
+                                }
+                                Read-Host "`nPress Enter to continue..."
                             }
                             elseif ($editChoice -eq "$backOpt") { break }
                         }
