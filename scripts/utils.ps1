@@ -82,7 +82,13 @@ function Get-UsmtConfig {
                                 $json.$section | Add-Member -MemberType NoteProperty -Name $prop -Value $localJson.$section.$prop
                             }
                             else {
-                                $json.$section.$prop = $localJson.$section.$prop
+                                if ($json.$section.$prop -is [array] -and $localJson.$section.$prop -is [array]) {
+                                    # Merge array properties instead of overwriting
+                                    $json.$section.$prop = @($json.$section.$prop) + @($localJson.$section.$prop)
+                                }
+                                else {
+                                    $json.$section.$prop = $localJson.$section.$prop
+                                }
                             }
                         }
                     }
