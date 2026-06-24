@@ -165,8 +165,10 @@ else {
                         Assert-AdminPrivileges -CallerBoundParameters $PSBoundParameters
                         $path = Get-BackupSelection -ConfigPath (Join-Path $ScriptDir "usmt-config.json")
                         if ([string]::IsNullOrEmpty($path) -or -not (Test-Path $path)) {
-                            if (-not [string]::IsNullOrEmpty($path)) { Log "Backup file not found at: '$path'" 'ERROR' }
-                            Read-Host "`nPress Enter to return to menu..."
+                            if (-not [string]::IsNullOrEmpty($path)) {
+                                Log "Backup file not found at: '$path'" 'ERROR'
+                                Read-Host "`nPress Enter to return to menu..."
+                            }
                             continue
                         }
                         $int = Read-Host "Interactive mode (confirm restore)? [y/N]"
