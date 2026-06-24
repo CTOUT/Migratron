@@ -105,7 +105,11 @@ while ($attempt -lt $maxAttempts -and -not $success) {
         if ($attempt -gt 0 -or [string]::IsNullOrWhiteSpace($encryptionKey)) {
             if ($attempt -gt 0) {
                 Write-Host ""
-                Log "Decryption failed. Do you want to manually enter a custom password for this archive?" 'WARN'
+                $retry = Read-Host "[!] Decryption failed. Do you want to manually enter a custom password? [y/N]"
+                if ($retry -notlike "y*") {
+                    Log "Verification aborted by user." 'WARN'
+                    break
+                }
             } else {
                 Log "Encryption is enabled, but no key was found in the configuration." 'WARN'
             }
