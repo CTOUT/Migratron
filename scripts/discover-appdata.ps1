@@ -192,10 +192,10 @@ if ($pathsToAdd.Count -eq 0) {
 
 # Load existing config
 $localCfg = Get-LocalConfig
-if (-not $localCfg.psobject.Properties.Match('backup')) {
+if ($null -eq $localCfg.psobject.Properties['backup']) {
     $localCfg | Add-Member -MemberType NoteProperty -Name "backup" -Value (New-Object PSObject)
 }
-if (-not $localCfg.backup.psobject.Properties.Match('includePaths')) {
+if ($null -eq $localCfg.backup.psobject.Properties['includePaths']) {
     $localCfg.backup | Add-Member -MemberType NoteProperty -Name "includePaths" -Value @()
 }
 
