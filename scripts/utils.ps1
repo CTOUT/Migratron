@@ -442,3 +442,64 @@ function Wait-OneDriveSync {
     }
 }
 #endregion
+
+#region Interactive UX Helpers
+function Get-BackupSelection {
+    param([string]$ConfigPath)
+    
+    $config = Get-UsmtConfig -ConfigPath $ConfigPath
+    if ($null -eq $config) { return $null }
+    
+    $outputDir = if (-not [string]::IsNullOrEmpty($config.backup.outputDirectory)) { $config.backup.outputDirectory } else { "MigratronBackups" }
+    $outputDirResolved = Resolve-PathVariables -Path $outputDir
+    
+    if (-not [System.IO.Path]::IsPathRooted($outputDirResolved)) {
+        $outputDirResolved = [System.IO.Path]::GetFullPath((Join-Path (Get-Location).Path $outputDirResolved))
+    }
+    
+    if (-not (Test-Path $outputDirResolved)) {
+        Log "Backup directory does not exist: $outputDirResolved" 'WARN'
+        $choice = Read-Host "Enter manual path to backup archive (or press Enter to cancel)"
+        if ([string]::IsNullOrWhiteSpace($choice)) { return $null }
+        return $choice.Trim("'", '"')
+    }
+    
+    $backups = @(Get-ChildItem -Path $outputDirResolved -Filter "migratron-store-*" | 
+               Where-Object { $_.Name -match '^migratron-store-\d{8}-\d{6}(\.zip)?$' } | 
+               Sort-Object LastWriteTime -Descending)
+               
+    if ($backups.Count -eq 0) {
+        Log "No previous snapshots found in $outputDirResolved" 'INFO'
+        $choice = Read-Host "Enter manual path to backup archive (or press Enter to cancel)"
+        if ([string]::IsNullOrWhiteSpace($choice)) { return $null }
+        return $choice.Trim("'", '"')
+    }
+    
+    Log "Available Backups:" 'INFO'
+    for ($i = 0; $i -lt $backups.Count; $i++) {
+        $b = $backups[$i]
+        $sizeStr = ""
+        if ($b -is [System.IO.DirectoryInfo]) {
+            $dirSize = (Get-ChildItem -Path $b.FullName -Recurse -File -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum).Sum
+            $sizeStr = Get-FormatSize -Bytes $dirSize
+            $sizeStr += " (Folder)"
+        }
+        else {
+            $sizeStr = Get-FormatSize -Bytes $b.Length
+            $sizeStr += " (ZIP)"
+        }
+        Log "  [$($i + 1)] $($b.Name) (Size: $sizeStr, Modified: $($b.LastWriteTime))" 'INFO'
+    }
+    
+    Write-Host ""
+    $choice = Read-Host "Enter backup number [1-$($backups.Count)], or paste a manual path (Enter to cancel)"
+    if ([string]::IsNullOrWhiteSpace($choice)) { return $null }
+    
+    if ($choice -match '^\d+$' -and [int]$choice -ge 1 -and [int]$choice -le $backups.Count) {
+        return $backups[[int]$choice - 1].FullName
+    }
+    else {
+        return $choice.Trim("'", '"')
+    }
+}
+#endregion

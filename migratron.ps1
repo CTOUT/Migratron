@@ -141,12 +141,13 @@ else {
                     Show-MenuHeader -Title "Migration Operations"
                     Write-Host "  [1] Backup Settings to ZIP Archive"
                     Write-Host "  [2] Restore Settings from ZIP Archive"
+                    Write-Host "  [3] Verify Backup Archive"
                     Write-Host "  ---" -ForegroundColor DarkGray
                     Write-Host "  [M] Back to Main Menu"
                     Write-Host "  [Q] Quit"
                     Write-Host ""
                     
-                    $opChoice = Read-Host "Select an option [1-2, M, Q]"
+                    $opChoice = Read-Host "Select an option [1-3, M, Q]"
                     if ($opChoice -match '^[qQ]$') { return }
                     elseif ($opChoice -match '^[mM]$') { continue MainMenu }
                     elseif ($opChoice -eq "1") {
@@ -162,10 +163,9 @@ else {
                     elseif ($opChoice -eq "2") {
                         Write-Host ""
                         Assert-AdminPrivileges -CallerBoundParameters $PSBoundParameters
-                        $path = Read-Host "Enter path to the backup ZIP file"
-                        $path = $path.Trim("'", '"')
+                        $path = Get-BackupSelection -ConfigPath (Join-Path $ScriptDir "usmt-config.json")
                         if ([string]::IsNullOrEmpty($path) -or -not (Test-Path $path)) {
-                            Log "Backup file not found at: '$path'" 'ERROR'
+                            if (-not [string]::IsNullOrEmpty($path)) { Log "Backup file not found at: '$path'" 'ERROR' }
                             Read-Host "`nPress Enter to return to menu..."
                             continue
                         }
@@ -177,6 +177,22 @@ else {
                         if ($intSwitch) { $params["Interactive"] = $true }
                         if ($drySwitch) { $params["DryRun"] = $true }
                         & (Join-Path $ScriptDir "restore-profile.ps1") @params
+                        Read-Host "`nPress Enter to return to menu..."
+                    }
+                    elseif ($opChoice -eq "3") {
+                        Write-Host ""
+                        Assert-AdminPrivileges -CallerBoundParameters $PSBoundParameters
+                        $path = Get-BackupSelection -ConfigPath (Join-Path $ScriptDir "usmt-config.json")
+                        if ([string]::IsNullOrEmpty($path) -or -not (Test-Path $path)) {
+                            if (-not [string]::IsNullOrEmpty($path)) { Log "Backup file not found at: '$path'" 'ERROR' }
+                            Read-Host "`nPress Enter to return to menu..."
+                            continue
+                        }
+                        $dry = Read-Host "Dry run (simulate verify)? [y/N]"
+                        $drySwitch = if ($dry -like "y*") { $true } else { $false }
+                        $params = @{ BackupPath = $path }
+                        if ($drySwitch) { $params["DryRun"] = $true }
+                        & (Join-Path $ScriptDir "verify-backup.ps1") @params
                         Read-Host "`nPress Enter to return to menu..."
                     }
                 }
