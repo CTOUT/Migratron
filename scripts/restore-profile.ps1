@@ -130,8 +130,10 @@ if ($config.backup.encrypt) {
         }
     }
     
+    # Write the key to a highly restricted temp file without BOM or Newlines
     $tempKeyFile = Join-Path $env:TEMP "migratron-key-$timestamp.txt"
-    $encryptionKey | Out-File -FilePath $tempKeyFile -Encoding utf8 -Force
+    $utf8NoBom = New-Object System.Text.UTF8Encoding $false
+    [System.IO.File]::WriteAllText($tempKeyFile, $encryptionKey, $utf8NoBom)
     Log "Decryption key securely piped to temporary keyfile." 'SUCCESS'
 }
 
