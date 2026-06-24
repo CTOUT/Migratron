@@ -22,6 +22,18 @@
             <pattern type="File">C:\Users\*\AppData\Local\Microsoft\Office\*\*\*Rules\* [*]</pattern>
             <pattern type="File">C:\Users\*\AppData\Local\Microsoft\Office\*\*\*Rules\** [*]</pattern>
             
+            <!-- Exclude VS Code storage bloat (keeps settings.json, keybindings, etc. but drops massive workspace cache) -->
+            <pattern type="File">C:\Users\*\AppData\Roaming\Code\User\workspaceStorage\* [*]</pattern>
+            <pattern type="File">C:\Users\*\AppData\Roaming\Code\User\workspaceStorage\** [*]</pattern>
+            <pattern type="File">C:\Users\*\AppData\Roaming\Code\User\globalStorage\* [*]</pattern>
+            <pattern type="File">C:\Users\*\AppData\Roaming\Code\User\globalStorage\** [*]</pattern>
+            <pattern type="File">C:\Users\*\AppData\Roaming\Code\CachedData\* [*]</pattern>
+            <pattern type="File">C:\Users\*\AppData\Roaming\Code\CachedData\** [*]</pattern>
+            <pattern type="File">C:\Users\*\AppData\Roaming\Code\Cache\* [*]</pattern>
+            <pattern type="File">C:\Users\*\AppData\Roaming\Code\Cache\** [*]</pattern>
+            <pattern type="File">C:\Users\*\AppData\Roaming\Code\Code Cache\* [*]</pattern>
+            <pattern type="File">C:\Users\*\AppData\Roaming\Code\Code Cache\** [*]</pattern>
+            
             <!-- Exclude generic application caches (Electron, Chromium, etc.) -->
             <pattern type="File">C:\Users\*\AppData\*\*\Cache\* [*]</pattern>
             <pattern type="File">C:\Users\*\AppData\*\*\Cache\** [*]</pattern>
