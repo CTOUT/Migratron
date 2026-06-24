@@ -26,6 +26,18 @@
             <pattern type="File">C:\Users\*\AppData\Local\Microsoft\Office\*\*\UsageMetricsStore\** [*]</pattern>
             <pattern type="File">C:\Users\*\AppData\Local\Microsoft\Office\*\*\*Rules\* [*]</pattern>
             <pattern type="File">C:\Users\*\AppData\Local\Microsoft\Office\*\*\*Rules\** [*]</pattern>
+
+            <!-- Exclude massive Microsoft application caches and telemetry -->
+            <pattern type="File">C:\Users\*\AppData\Local\Microsoft\OneDrive\* [*]</pattern>
+            <pattern type="File">C:\Users\*\AppData\Local\Microsoft\OneDrive\** [*]</pattern>
+            <pattern type="File">C:\Users\*\AppData\Local\Microsoft\Edge\* [*]</pattern>
+            <pattern type="File">C:\Users\*\AppData\Local\Microsoft\Edge\** [*]</pattern>
+            <pattern type="File">C:\Users\*\AppData\Local\Microsoft\Olk\* [*]</pattern>
+            <pattern type="File">C:\Users\*\AppData\Local\Microsoft\Olk\** [*]</pattern>
+            <pattern type="File">C:\Users\*\AppData\Local\Microsoft\Office\* [*]</pattern>
+            <pattern type="File">C:\Users\*\AppData\Local\Microsoft\Office\** [*]</pattern>
+            <pattern type="File">C:\Users\*\AppData\Local\Microsoft\Copilot\* [*]</pattern>
+            <pattern type="File">C:\Users\*\AppData\Local\Microsoft\Copilot\** [*]</pattern>
             
             <!-- Exclude VS Code storage bloat (keeps settings.json, keybindings, etc. but drops massive workspace cache) -->
             <pattern type="File">C:\Users\*\AppData\Roaming\Code\User\workspaceStorage\* [*]</pattern>
