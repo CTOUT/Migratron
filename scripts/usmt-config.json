@@ -24,9 +24,7 @@
       "%USERPROFILE%\\Box Sync",
       "%windir%\\ServiceProfiles"
     ],
-    "includePaths": [
-      "%USERPROFILE%\\AppData\\LocalLow"
-    ],
+    "includePaths": ["%USERPROFILE%\\AppData\\LocalLow"],
     "waitForSync": true
   },
   "schedule": {
