@@ -186,7 +186,12 @@ while ($true) {
         
         Write-Host -NoNewline " | "
         Write-Host -NoNewline "$statPad" -ForegroundColor $statusColor
-        Write-Host " | $typePad | $sizePad | $filtPad | $($item.VarPath)"
+        
+        $esc = [char]27
+        $uri = "file:///" + $item.FullPath.Replace('\', '/')
+        $clickablePath = "$esc]8;;$uri$esc\$($item.VarPath)$esc]8;;$esc\"
+        
+        Write-Host " | $typePad | $sizePad | $filtPad | $clickablePath"
     }
     Write-Host "----|---------|--------|------------|------------|------------|-------------------------------------------"
 
