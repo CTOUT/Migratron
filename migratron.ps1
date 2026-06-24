@@ -207,12 +207,13 @@ else {
                     Write-Host "  [1] Scan and Audit Local Settings"
                     Write-Host "  [2] Manage Scheduled Task"
                     Write-Host "  [3] Edit Backup Settings (Retention & Encryption)"
+                    Write-Host "  [4] Set Backup Output Directory"
                     Write-Host "  ---" -ForegroundColor DarkGray
                     Write-Host "  [M] Back to Main Menu"
                     Write-Host "  [Q] Quit"
                     Write-Host ""
                     
-                    $cfgChoice = Read-Host "Select an option [1-3, M, Q]"
+                    $cfgChoice = Read-Host "Select an option [1-4, M, Q]"
                     if ($cfgChoice -match '^[qQ]$') { return }
                     elseif ($cfgChoice -match '^[mM]$') { continue MainMenu }
                     elseif ($cfgChoice -eq "1") {
@@ -497,6 +498,53 @@ else {
                                 Read-Host "`nPress Enter to continue..."
                             }
                             elseif ($editChoice -eq "$backOpt") { break }
+                        }
+                    }
+                    elseif ($cfgChoice -eq "4") {
+                        while ($true) {
+                            Show-MenuHeader -Title "Set Backup Output Directory"
+                            $mergedCfg = Get-UsmtConfig
+                            $currentDir = Resolve-PathVariables -Path $mergedCfg.backup.outputDir
+                            Write-Host "  Current Target: $currentDir" -ForegroundColor Cyan
+                            Write-Host ""
+                            Write-Host "  [1] Default OneDrive (`$ONEDRIVE\MigratronBackups)"
+                            Write-Host "  [2] Corporate OneDrive (`$ONEDRIVECOMMERCIAL\MigratronBackups)"
+                            Write-Host "  [3] Personal OneDrive (`$ONEDRIVECONSUMER\MigratronBackups)"
+                            Write-Host "  [4] Custom Local/Network Path"
+                            Write-Host "  ---" -ForegroundColor DarkGray
+                            Write-Host "  [M] Back to Configuration Menu"
+                            Write-Host "  [Q] Quit"
+                            Write-Host ""
+                            
+                            $outChoice = Read-Host "Select an option [1-4, M, Q]"
+                            if ($outChoice -match '^[qQ]$') { return }
+                            elseif ($outChoice -match '^[mM]$') { break }
+                            elseif ($outChoice -eq "1") {
+                                $newPath = "`$ONEDRIVE\MigratronBackups"
+                            }
+                            elseif ($outChoice -eq "2") {
+                                $newPath = "`$ONEDRIVECOMMERCIAL\MigratronBackups"
+                            }
+                            elseif ($outChoice -eq "3") {
+                                $newPath = "`$ONEDRIVECONSUMER\MigratronBackups"
+                            }
+                            elseif ($outChoice -eq "4") {
+                                Write-Host ""
+                                $newPath = Read-Host "Enter custom path (or leave empty to cancel)"
+                                if ([string]::IsNullOrWhiteSpace($newPath)) { continue }
+                            }
+                            else {
+                                continue
+                            }
+                            
+                            if ($newPath) {
+                                $localCfg = Get-LocalConfig
+                                $localCfg.backup | Add-Member -MemberType NoteProperty -Name "outputDir" -Value $newPath -Force
+                                Set-LocalConfig -ConfigObject $localCfg
+                                Write-Host "`n[√] Success: Output directory updated." -ForegroundColor Green
+                                Start-Sleep -Seconds 1
+                                break
+                            }
                         }
                     }
                 }
