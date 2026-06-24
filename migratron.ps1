@@ -132,10 +132,10 @@ else {
         Write-Host "  [1] Migration Operations (Backup & Restore)"
         Write-Host "  [2] Manage Backups (List & Delete)"
         Write-Host "  [3] Configuration & Automation"
-        Write-Host "  [4] Exit"
+        Write-Host "  [Q] Quit"
         Write-Host ""
         
-        $choice = Read-Host "Select an option [1-4]"
+        $choice = Read-Host "Select an option [1-3, Q]"
         
         switch ($choice) {
             "1" {
@@ -148,10 +148,12 @@ else {
                     Write-Host "  [1] Backup Settings to ZIP Archive"
                     Write-Host "  [2] Restore Settings from ZIP Archive"
                     Write-Host "  [3] Back to Main Menu"
+                    Write-Host "  [Q] Quit"
                     Write-Host ""
                     
-                    $opChoice = Read-Host "Select an option [1-3]"
-                    if ($opChoice -eq "1") {
+                    $opChoice = Read-Host "Select an option [1-3, Q]"
+                    if ($opChoice -match '^[qQ]$') { return }
+                    elseif ($opChoice -eq "1") {
                         Write-Host ""
                         Assert-AdminPrivileges -CallerBoundParameters $PSBoundParameters
                         $dry = Read-Host "Dry run (simulate backup)? [y/N]"
@@ -199,10 +201,12 @@ else {
                     Write-Host "  [2] Manage Scheduled Task"
                     Write-Host "  [3] Edit Backup Settings (Retention & Encryption)"
                     Write-Host "  [4] Back to Main Menu"
+                    Write-Host "  [Q] Quit"
                     Write-Host ""
                     
-                    $cfgChoice = Read-Host "Select an option [1-4]"
-                    if ($cfgChoice -eq "1") {
+                    $cfgChoice = Read-Host "Select an option [1-4, Q]"
+                    if ($cfgChoice -match '^[qQ]$') { return }
+                    elseif ($cfgChoice -eq "1") {
                         Write-Host ""
                         & (Join-Path $ScriptDir "scan-system.ps1")
                         Read-Host "`nPress Enter to return to menu..."
@@ -214,8 +218,10 @@ else {
                         Write-Host "  [1] Register Daily Backup Task"
                         Write-Host "  [2] Remove Scheduled Task"
                         Write-Host "  [3] Back to Menu"
-                        $taskChoice = Read-Host "Select an option [1-3]"
-                        if ($taskChoice -eq "1") {
+                        Write-Host "  [Q] Quit"
+                        $taskChoice = Read-Host "Select an option [1-3, Q]"
+                        if ($taskChoice -match '^[qQ]$') { return }
+                        elseif ($taskChoice -eq "1") {
                             $timeVal = Read-Host "Enter daily backup time (e.g. 22:00)"
                             if ([string]::IsNullOrEmpty($timeVal) -or $timeVal -notmatch '^\d{2}:\d{2}$') {
                                 Log "Invalid time format. Using default 22:00." 'WARN'
@@ -276,10 +282,12 @@ else {
                             }
                             
                             Write-Host "  [$backOpt] Back to Menu"
+                            Write-Host "  [Q] Quit"
                             Write-Host ""
                             
-                            $editChoice = Read-Host "Select an option [1-$backOpt]"
-                            if ($editChoice -eq "1") {
+                            $editChoice = Read-Host "Select an option [1-$backOpt, Q]"
+                            if ($editChoice -match '^[qQ]$') { return }
+                            elseif ($editChoice -eq "1") {
                                 $newMode = Read-Host "Enter retention mode (simple/gfs, or leave empty to clear override)"
                                 if ([string]::IsNullOrWhiteSpace($newMode)) {
                                     $localCfg.backup.psobject.Properties.Remove("retentionMode")
@@ -349,6 +357,19 @@ else {
                                     elseif ($mVal -match '^\d+$') { $localCfg.backup.gfsRetention | Add-Member -MemberType NoteProperty -Name "monthlies" -Value [int]$mVal -Force }
                                     
                                     Set-LocalConfig -ConfigObject $localCfg
+                                    
+                                    $tempCfg = Get-UsmtConfig
+                                    $outDir = Resolve-PathVariables -Path $tempCfg.backup.outputDir
+                                    if (Test-Path $outDir) {
+                                        $backupsCount = @(Get-ChildItem -Path $outDir -Filter "migratron-store-*" | 
+                                            Where-Object { $_.Name -match '^migratron-store-\d{8}-\d{6}(\.zip)?$' }).Count
+                                        if ($backupsCount -gt 0) {
+                                            Write-Host ""
+                                            Write-Host "WARNING: You currently have $backupsCount backups." -ForegroundColor Yellow
+                                            Write-Host "Lowering GFS limits may permanently delete older tiered snapshots on the next run!" -ForegroundColor Red
+                                            Read-Host "`nPress Enter to acknowledge..."
+                                        }
+                                    }
                                 }
                             }
                             elseif ($editChoice -eq "3") {
@@ -409,12 +430,12 @@ else {
                     elseif ($cfgChoice -eq "4") { break }
                 }
             }
-            "4" {
+            { $_ -match '^[qQ]$' } {
                 Write-Host "`nGoodbye!" -ForegroundColor Cyan
                 return
             }
             default {
-                Log "Invalid choice. Please enter a value between 1 and 4." 'WARN'
+                Log "Invalid choice. Please enter a valid option." 'WARN'
                 Start-Sleep -Seconds 1
             }
         }
