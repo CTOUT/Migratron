@@ -4,10 +4,6 @@ Tracked work items for Migratron. Items are moved from here to `CHANGELOG.md` wh
 
 ---
 
-
-
----
-
 ## Future Roadmap
 
 - [ ] **OneDrive Sync Verification** — Check the local OneDrive sync status (using status attributes or querying client state) before completing the backup operation, ensuring the upload is in progress or completed.
