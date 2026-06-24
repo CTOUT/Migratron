@@ -39,6 +39,17 @@ foreach ($path in $scanPaths) {
                 
                 if ($files) {
                     $sizeBytes = ($files | Measure-Object -Property Length -Sum).Sum
+                    
+                    # Calculate filtered size based on ExcludeCommon rules
+                    $filteredFiles = $files | Where-Object {
+                        $_.FullName -notmatch '(?i)\\(workspaceStorage|globalStorage|CachedData|Cache|Code Cache|GPUCache|Crashpad|Temp|TMP|Temporary)\\'
+                    }
+                    if ($filteredFiles) {
+                        $filteredSizeBytes = ($filteredFiles | Measure-Object -Property Length -Sum).Sum
+                    } else {
+                        $filteredSizeBytes = 0
+                    }
+
                     $exts = $files.Extension | Select-Object -Unique
                     if ($exts -match '(?i)^\.(json|cfg|ini|xml|yml|yaml)$') {
                         $hasConfigExt = $true
@@ -76,11 +87,11 @@ foreach ($path in $scanPaths) {
 
         $rec = ""
         if ($nameMatch -or $hasInterestingDir -or $hasConfigExt -or $baseType -eq "Saved Games") {
-            if ($sizeBytes -gt 1GB) { $rec = "[HEAVY]" }
+            if ($filteredSizeBytes -gt 1GB) { $rec = "[HEAVY]" }
             else { $rec = "[OK]" }
         } else {
-            if ($sizeBytes -lt 250MB) { $rec = "[OK]" }
-            elseif ($sizeBytes -gt 1GB) { $rec = "[HEAVY]" }
+            if ($filteredSizeBytes -lt 250MB) { $rec = "[OK]" }
+            elseif ($filteredSizeBytes -gt 1GB) { $rec = "[HEAVY]" }
             else { $rec = "[-]" }
         }
 
@@ -90,7 +101,9 @@ foreach ($path in $scanPaths) {
             FullPath = $dir.FullName
             VarPath = $varPath
             SizeBytes = $sizeBytes
+            FilteredSizeBytes = $filteredSizeBytes
             FormatSize = Get-FormatSize -Bytes $sizeBytes
+            FormatFilteredSize = Get-FormatSize -Bytes $filteredSizeBytes
             BaseType = $baseType
             Rec = $rec
         })
@@ -111,23 +124,24 @@ for ($i = 0; $i -lt $sortedCandidates.Count; $i++) {
 }
 
 Show-MenuHeader -Title "Discovered Configuration Folders"
-Write-Host " ID | Rec     | Type       | Size       | Name / Path" -ForegroundColor Cyan
-Write-Host "----|---------|------------|------------|-------------------------------------------"
+Write-Host " ID | Rec     | Type       | Size (Raw) | Size (Net) | Name / Path" -ForegroundColor Cyan
+Write-Host "----|---------|------------|------------|------------|-------------------------------------------"
 foreach ($item in $sortedCandidates) {
     $idPad = $item.Id.ToString().PadLeft(2)
     $recPad = $item.Rec.PadRight(7)
     $typePad = $item.BaseType.PadRight(10)
     $sizePad = $item.FormatSize.PadRight(10)
+    $filtPad = $item.FormatFilteredSize.PadRight(10)
     
     if ($item.Rec -eq "[HEAVY]") {
-        Write-Host " $idPad | $recPad | $typePad | $sizePad | $($item.VarPath)" -ForegroundColor Red
+        Write-Host " $idPad | $recPad | $typePad | $sizePad | $filtPad | $($item.VarPath)" -ForegroundColor Red
     } elseif ($item.Rec -eq "[OK]") {
-        Write-Host " $idPad | $recPad | $typePad | $sizePad | $($item.VarPath)" -ForegroundColor Green
+        Write-Host " $idPad | $recPad | $typePad | $sizePad | $filtPad | $($item.VarPath)" -ForegroundColor Green
     } else {
-        Write-Host " $idPad | $recPad | $typePad | $sizePad | $($item.VarPath)"
+        Write-Host " $idPad | $recPad | $typePad | $sizePad | $filtPad | $($item.VarPath)"
     }
 }
-Write-Host "----|---------|------------|------------|-------------------------------------------"
+Write-Host "----|---------|------------|------------|------------|-------------------------------------------"
 
 Write-Host "`nInstructions:" -ForegroundColor Yellow
 Write-Host " - Enter the IDs of folders you wish to backup, separated by commas (e.g. '1, 4, 7')"
