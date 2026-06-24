@@ -236,11 +236,18 @@ else {
                     }
                     elseif ($cfgChoice -eq "3") {
                         while ($true) {
+                            $mergedCfg = Get-UsmtConfig
                             $localCfg = Get-LocalConfig
-                            $retMode = if ($null -ne $localCfg.backup.retentionMode) { $localCfg.backup.retentionMode } else { "inherited" }
-                            $enc = if ($null -ne $localCfg.backup.encrypt) { $localCfg.backup.encrypt } else { "inherited" }
+                            
+                            $retMode = $mergedCfg.backup.retentionMode
+                            $enc = $mergedCfg.backup.encrypt
                             $encEncoded = if ($null -ne $localCfg.backup.encryptionKeyEncoded) { $localCfg.backup.encryptionKeyEncoded } else { $false }
                             $hasKey = if (-not [string]::IsNullOrEmpty($localCfg.backup.encryptionKey)) { "Yes" } else { "No" }
+                            
+                            $simpleCount = $mergedCfg.backup.retentionCount
+                            $gfsD = $mergedCfg.backup.gfsRetention.dailies
+                            $gfsW = $mergedCfg.backup.gfsRetention.weeklies
+                            $gfsM = $mergedCfg.backup.gfsRetention.monthlies
                             
                             Clear-Host
                             Write-Host "==================================================" -ForegroundColor Magenta
@@ -248,13 +255,29 @@ else {
                             Write-Host "==================================================" -ForegroundColor Magenta
                             Write-Host ""
                             Write-Host "  [1] Toggle Retention Mode (Current: $retMode)"
-                            Write-Host "  [2] Toggle Encryption (Current: $enc)"
-                            Write-Host "  [3] Set Encryption Key (Key Set: $hasKey)"
-                            Write-Host "  [4] Toggle DPAPI Key Encoding (Current: $encEncoded)"
-                            Write-Host "  [5] Back to Menu"
+                            if ($retMode -eq 'simple') {
+                                Write-Host "  [2] Set Simple Retention Count (Current: $simpleCount)"
+                            } else {
+                                Write-Host "  [2] Set GFS Retention Count (D: $gfsD, W: $gfsW, M: $gfsM)"
+                            }
+                            Write-Host "  [3] Toggle Encryption (Current: $enc)"
+                            
+                            $keyOpt = -1
+                            $encOpt = -1
+                            $backOpt = 4
+                            
+                            if ($enc -eq $true) {
+                                $keyOpt = 4
+                                $encOpt = 5
+                                $backOpt = 6
+                                Write-Host "  [$keyOpt] Set Encryption Key (Key Set: $hasKey)"
+                                Write-Host "  [$encOpt] Toggle DPAPI Key Encoding (Current: $encEncoded)"
+                            }
+                            
+                            Write-Host "  [$backOpt] Back to Menu"
                             Write-Host ""
                             
-                            $editChoice = Read-Host "Select an option [1-5]"
+                            $editChoice = Read-Host "Select an option [1-$backOpt]"
                             if ($editChoice -eq "1") {
                                 $newMode = Read-Host "Enter retention mode (simple/gfs, or leave empty to clear override)"
                                 if ([string]::IsNullOrWhiteSpace($newMode)) {
@@ -265,6 +288,35 @@ else {
                                 Set-LocalConfig -ConfigObject $localCfg
                             }
                             elseif ($editChoice -eq "2") {
+                                if ($retMode -eq 'simple') {
+                                    $val = Read-Host "Enter simple retention count (number, or empty to clear)"
+                                    if ([string]::IsNullOrWhiteSpace($val)) {
+                                        $localCfg.backup.psobject.Properties.Remove("retentionCount")
+                                    } elseif ($val -match '^\d+$') {
+                                        $localCfg.backup | Add-Member -MemberType NoteProperty -Name "retentionCount" -Value [int]$val -Force
+                                    }
+                                } else {
+                                    Write-Host "Leave any value empty to skip/clear:" -ForegroundColor DarkGray
+                                    $dVal = Read-Host "Enter Dailies count"
+                                    $wVal = Read-Host "Enter Weeklies count"
+                                    $mVal = Read-Host "Enter Monthlies count"
+                                    
+                                    if (-not $localCfg.backup.psobject.Properties.Match('gfsRetention')) {
+                                        $localCfg.backup | Add-Member -MemberType NoteProperty -Name "gfsRetention" -Value (New-Object PSObject) -Force
+                                    }
+                                    
+                                    if ([string]::IsNullOrWhiteSpace($dVal)) { $localCfg.backup.gfsRetention.psobject.Properties.Remove("dailies") }
+                                    elseif ($dVal -match '^\d+$') { $localCfg.backup.gfsRetention | Add-Member -MemberType NoteProperty -Name "dailies" -Value [int]$dVal -Force }
+                                    
+                                    if ([string]::IsNullOrWhiteSpace($wVal)) { $localCfg.backup.gfsRetention.psobject.Properties.Remove("weeklies") }
+                                    elseif ($wVal -match '^\d+$') { $localCfg.backup.gfsRetention | Add-Member -MemberType NoteProperty -Name "weeklies" -Value [int]$wVal -Force }
+                                    
+                                    if ([string]::IsNullOrWhiteSpace($mVal)) { $localCfg.backup.gfsRetention.psobject.Properties.Remove("monthlies") }
+                                    elseif ($mVal -match '^\d+$') { $localCfg.backup.gfsRetention | Add-Member -MemberType NoteProperty -Name "monthlies" -Value [int]$mVal -Force }
+                                }
+                                Set-LocalConfig -ConfigObject $localCfg
+                            }
+                            elseif ($editChoice -eq "3") {
                                 $newEnc = Read-Host "Enable encryption? (y/n, or empty to clear override)"
                                 if ([string]::IsNullOrWhiteSpace($newEnc)) {
                                     $localCfg.backup.psobject.Properties.Remove("encrypt")
@@ -274,7 +326,7 @@ else {
                                 }
                                 Set-LocalConfig -ConfigObject $localCfg
                             }
-                            elseif ($editChoice -eq "3") {
+                            elseif ($keyOpt -ne -1 -and $editChoice -eq "$keyOpt") {
                                 $newKey = Read-Host -AsSecureString "Enter new encryption key (leave empty to clear)"
                                 $plainKey = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto([System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($newKey))
                                 if ([string]::IsNullOrWhiteSpace($plainKey)) {
@@ -292,7 +344,7 @@ else {
                                     Start-Sleep -Seconds 1
                                 }
                             }
-                            elseif ($editChoice -eq "4") {
+                            elseif ($encOpt -ne -1 -and $editChoice -eq "$encOpt") {
                                 $newEncEncoded = -not $encEncoded
                                 
                                 Write-Host ""
@@ -316,7 +368,7 @@ else {
                                     Start-Sleep -Seconds 1
                                 }
                             }
-                            elseif ($editChoice -eq "5") { break }
+                            elseif ($editChoice -eq "$backOpt") { break }
                         }
                     }
                     elseif ($cfgChoice -eq "4") { break }
