@@ -34,6 +34,7 @@ node_modules/
 
 # Dynamic USMT rules and staging/restore stores
 **/ExcludeCustom.xml
+**/IncludeCustom.xml
 **/usmt-config.local.json
 .migratron-temp-store-*/
 .migratron-temp-restore-*/
