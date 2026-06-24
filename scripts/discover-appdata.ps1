@@ -124,6 +124,7 @@ for ($i = 0; $i -lt $sortedCandidates.Count; $i++) {
 }
 
 $lastActionMessage = ""
+$currentPage = 0
 
 while ($true) {
     Clear-Host
@@ -143,10 +144,24 @@ while ($true) {
     $currentIncludes = @($localCfg.backup.includePaths)
     $currentExcludes = @($localCfg.backup.excludePaths)
 
-    Show-MenuHeader -Title "Discovered Configuration Folders"
+    # Calculate page size based on terminal height (reserving 14 lines for headers/footers)
+    $terminalHeight = 40
+    try { $terminalHeight = $Host.UI.RawUI.WindowSize.Height } catch {}
+    $pageSize = $terminalHeight - 14
+    if ($pageSize -lt 10) { $pageSize = 15 } # fallback
+
+    $totalPages = [math]::Ceiling($sortedCandidates.Count / $pageSize)
+    if ($currentPage -ge $totalPages) { $currentPage = [math]::Max(0, $totalPages - 1) }
+    if ($currentPage -lt 0) { $currentPage = 0 }
+
+    $startIndex = $currentPage * $pageSize
+    $pageItems = $sortedCandidates | Select-Object -Skip $startIndex -First $pageSize
+
+    Show-MenuHeader -Title "Discovered Configuration Folders" -Subtitle "Page $($currentPage + 1) of $totalPages"
     Write-Host " ID | Rec     | Status | Type       | Size (Raw) | Size (Net) | Name / Path" -ForegroundColor Cyan
     Write-Host "----|---------|--------|------------|------------|------------|-------------------------------------------"
-    foreach ($item in $sortedCandidates) {
+    
+    foreach ($item in $pageItems) {
         $idPad = $item.Id.ToString().PadLeft(2)
         $recPad = $item.Rec.PadRight(7)
         $typePad = $item.BaseType.PadRight(10)
@@ -181,17 +196,30 @@ while ($true) {
     }
 
     Write-Host "`nInstructions:" -ForegroundColor Yellow
+    Write-Host " - Type 'n' for Next Page, 'p' for Previous Page (or just press Enter for Next)"
     Write-Host " - To INCLUDE folders, type 'i' followed by IDs (e.g. 'i 1, 4, 7-10')"
     Write-Host " - To EXCLUDE folders, type 'e' followed by IDs (e.g. 'e 2, 5')"
-    Write-Host " - To REMOVE folders from all lists, type 'r' followed by IDs (e.g. 'r 3')"
-    Write-Host " - Without a prefix, IDs will be INCLUDED by default."
-    Write-Host " - Press Enter (empty line) when you are finished."
+    Write-Host " - To REMOVE folders, type 'r' followed by IDs (e.g. 'r 3')"
+    Write-Host " - Type 'q' or 'exit' when you are finished."
 
-    $selection = Read-Host "`nEnter selection [i, e, r, or empty]"
+    $selection = Read-Host "`nEnter selection [n, p, i, e, r, or q]"
+    $selection = $selection.Trim()
 
-    if ([string]::IsNullOrWhiteSpace($selection)) {
+    if ([string]::IsNullOrWhiteSpace($selection) -or $selection -eq 'n') {
+        if ($currentPage -lt ($totalPages - 1)) { $currentPage++ }
+        else { $lastActionMessage = "[-] You are on the last page." }
+        continue
+    }
+
+    if ($selection -match '(?i)^(q|quit|exit)$') {
         Write-Host "[-] Finished discovery." -ForegroundColor DarkGray
         return
+    }
+
+    if ($selection -match '(?i)^p$') {
+        if ($currentPage -gt 0) { $currentPage-- }
+        else { $lastActionMessage = "[-] You are on the first page." }
+        continue
     }
 
     $action = "include"
@@ -202,6 +230,12 @@ while ($true) {
         $idString = $matches[2]
         if ($prefix -eq 'e') { $action = "exclude" }
         elseif ($prefix -eq 'r') { $action = "remove" }
+    } elseif ($selection -match '^\d') {
+        # Defaults to include if just numbers are typed
+        $action = "include"
+    } else {
+        $lastActionMessage = "[-] Unknown command. Please try again."
+        continue
     }
 
     $selectedIds = @()
