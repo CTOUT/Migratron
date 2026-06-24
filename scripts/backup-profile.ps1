@@ -405,6 +405,15 @@ try {
             Log "USMT Binaries are up-to-date in output directory. Skipping copy." 'DEBUG'
         }
         
+        if ($null -ne $config.backup.waitForSync -and $config.backup.waitForSync) {
+            Step "OneDrive Sync Verification"
+            if ($config.backup.compress) {
+                Wait-OneDriveSync -Path $zipFilePath
+            } else {
+                Wait-OneDriveSync -Path $destFolder
+            }
+        }
+        
         # Retention management
         Log "Checking backup retention policy..."
         $retentionMode = if (-not [string]::IsNullOrEmpty($config.backup.retentionMode)) { $config.backup.retentionMode } else { 'simple' }
@@ -473,14 +482,6 @@ try {
                 }
             }
         }
-        
-        if ($null -ne $config.backup.waitForSync -and $config.backup.waitForSync) {
-            Step "OneDrive Sync Verification"
-            if ($config.backup.compress) {
-                Wait-OneDriveSync -Path $zipFilePath
-            } else {
-                Wait-OneDriveSync -Path $destFolder
-            }
         }
     }
     else {
