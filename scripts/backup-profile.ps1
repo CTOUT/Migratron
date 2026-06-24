@@ -482,7 +482,6 @@ try {
                 }
             }
         }
-        }
     }
     else {
         Log "ScanState failed with exit code: $exitCode." 'ERROR'
