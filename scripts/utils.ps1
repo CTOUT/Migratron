@@ -130,6 +130,24 @@ function Resolve-PathVariables {
     $resolved = [System.Environment]::ExpandEnvironmentVariables($resolved)
     return $resolved
 }
+
+function Convert-ToUsmtPath {
+    param([string]$ResolvedPath)
+    if ([string]::IsNullOrEmpty($ResolvedPath)) { return $ResolvedPath }
+    
+    # Translate absolute paths into USMT CSIDL variables.
+    # USMT ignores absolute paths pointing inside a user profile, so they must be translated.
+    $usmtPath = $ResolvedPath -ireplace [regex]::Escape($env:LOCALAPPDATA), '%CSIDL_LOCAL_APPDATA%'
+    $usmtPath = $usmtPath -ireplace [regex]::Escape($env:APPDATA), '%CSIDL_APPDATA%'
+    $usmtPath = $usmtPath -ireplace [regex]::Escape($env:USERPROFILE), '%CSIDL_PROFILE%'
+    $usmtPath = $usmtPath -ireplace [regex]::Escape($env:windir), '%CSIDL_WINDOWS%'
+    if ($null -ne ${env:ProgramFiles(x86)}) {
+        $usmtPath = $usmtPath -ireplace [regex]::Escape(${env:ProgramFiles(x86)}), '%CSIDL_PROGRAM_FILESX86%'
+    }
+    $usmtPath = $usmtPath -ireplace [regex]::Escape($env:ProgramFiles), '%CSIDL_PROGRAM_FILES%'
+    
+    return $usmtPath
+}
 #endregion
 
 #region Manifest/Config Management

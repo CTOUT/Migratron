@@ -78,7 +78,8 @@ if ($config.backup.excludePaths -and $config.backup.excludePaths.Count -gt 0) {
     )
     foreach ($path in $config.backup.excludePaths) {
         $resolvedPath = Resolve-PathVariables -Path $path
-        $cleanPath = $resolvedPath.TrimEnd('\')
+        $usmtPath = Convert-ToUsmtPath -ResolvedPath $resolvedPath
+        $cleanPath = $usmtPath.TrimEnd('\')
         if ($cleanPath -match '^[a-zA-Z]:$') {
             $cleanPath = "$cleanPath\"
         }
@@ -126,7 +127,8 @@ if ($config.backup.includePaths -and $config.backup.includePaths.Count -gt 0) {
     )
     foreach ($path in $config.backup.includePaths) {
         $resolvedPath = Resolve-PathVariables -Path $path
-        $cleanPath = $resolvedPath.TrimEnd('\')
+        $usmtPath = Convert-ToUsmtPath -ResolvedPath $resolvedPath
+        $cleanPath = $usmtPath.TrimEnd('\')
         if ($cleanPath -match '^[a-zA-Z]:$') {
             $cleanPath = "$cleanPath\"
         }
