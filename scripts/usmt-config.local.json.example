@@ -23,7 +23,13 @@
   },
   "backup": {
     "outputDir": "$ONEDRIVE\\MigratronBackups",
+    "retentionMode": "simple",
     "retentionCount": 5,
+    "gfsRetention": {
+      "dailies": 7,
+      "weeklies": 4,
+      "monthlies": 12
+    },
     "compress": false,
     "encryptionKey": "",
     "generateManifest": true,

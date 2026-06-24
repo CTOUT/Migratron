@@ -399,19 +399,69 @@ try {
         
         # Retention management
         Log "Checking backup retention policy..."
-        $retentionLimit = $config.backup.retentionCount
-        if ($retentionLimit -gt 0) {
-            $backups = Get-ChildItem -Path $outputDirResolved -Filter "migratron-store-*" | 
-                       Where-Object { $_.Name -match '^migratron-store-\d{8}-\d{6}(\.zip)?$' } | 
-                       Sort-Object LastWriteTime
-            
-            if ($backups.Count -gt $retentionLimit) {
-                $deleteCount = $backups.Count - $retentionLimit
-                Log "Found $($backups.Count) backups. Retention policy is $retentionLimit. Deleting oldest $deleteCount backup(s)." 'WARN'
-                for ($i = 0; $i -lt $deleteCount; $i++) {
-                    $oldBackup = $backups[$i]
-                    Log "  Deleting: $($oldBackup.Name)" 'WARN'
-                    Remove-Item -Path $oldBackup.FullName -Recurse -Force
+        $retentionMode = if (-not [string]::IsNullOrEmpty($config.backup.retentionMode)) { $config.backup.retentionMode } else { 'simple' }
+        
+        $backups = @(Get-ChildItem -Path $outputDirResolved -Filter "migratron-store-*" | 
+                   Where-Object { $_.Name -match '^migratron-store-\d{8}-\d{6}(\.zip)?$' } | 
+                   Sort-Object LastWriteTime -Descending)
+                   
+        if ($backups.Count -gt 0) {
+            if ($retentionMode -eq 'gfs') {
+                $dailiesLimit = if ($null -ne $config.backup.gfsRetention.dailies) { $config.backup.gfsRetention.dailies } else { 7 }
+                $weekliesLimit = if ($null -ne $config.backup.gfsRetention.weeklies) { $config.backup.gfsRetention.weeklies } else { 4 }
+                $monthliesLimit = if ($null -ne $config.backup.gfsRetention.monthlies) { $config.backup.gfsRetention.monthlies } else { 12 }
+                
+                Log "Using GFS retention strategy ($dailiesLimit Dailies, $weekliesLimit Weeklies, $monthliesLimit Monthlies)." 'INFO'
+                
+                $keepList = @()
+                
+                # 1. Dailies: Keep the newest N backups
+                $dailies = $backups | Select-Object -First $dailiesLimit
+                if ($dailies) { $keepList += $dailies }
+                
+                # 2. Weeklies: From the remaining, group by Year-Week. Keep newest of each week up to N.
+                $remaining = $backups | Where-Object { $_.FullName -notin $keepList.FullName }
+                if ($remaining.Count -gt 0) {
+                    $weeklies = $remaining | Group-Object { 
+                        $cal = (Get-Culture).Calendar
+                        $week = $cal.GetWeekOfYear($_.LastWriteTime, [System.Globalization.CalendarWeekRule]::FirstFourDayWeek, [DayOfWeek]::Monday)
+                        return "$($_.LastWriteTime.Year)-W$($week.ToString('00'))" 
+                    } | ForEach-Object { $_.Group | Select-Object -First 1 } | Select-Object -First $weekliesLimit
+                    
+                    if ($weeklies) { $keepList += $weeklies }
+                }
+                
+                # 3. Monthlies: From the remaining, group by Year-Month. Keep newest of each month up to N.
+                $remaining = $backups | Where-Object { $_.FullName -notin $keepList.FullName }
+                if ($remaining.Count -gt 0) {
+                    $monthlies = $remaining | Group-Object { $_.LastWriteTime.ToString("yyyy-MM") } | 
+                                 ForEach-Object { $_.Group | Select-Object -First 1 } | 
+                                 Select-Object -First $monthliesLimit
+                                 
+                    if ($monthlies) { $keepList += $monthlies }
+                }
+                
+                # 4. Purge anything not in keepList
+                $toDelete = $backups | Where-Object { $_.FullName -notin $keepList.FullName }
+                if ($toDelete.Count -gt 0) {
+                    Log "GFS Pruning: Marking $($toDelete.Count) old backup(s) for deletion." 'WARN'
+                    foreach ($oldBackup in $toDelete) {
+                        Log "  Deleting: $($oldBackup.Name)" 'WARN'
+                        Remove-Item -Path $oldBackup.FullName -Recurse -Force
+                    }
+                }
+            }
+            else {
+                $retentionLimit = $config.backup.retentionCount
+                if ($retentionLimit -gt 0 -and $backups.Count -gt $retentionLimit) {
+                    $deleteCount = $backups.Count - $retentionLimit
+                    $toDelete = $backups | Select-Object -Last $deleteCount
+                    
+                    Log "Found $($backups.Count) backups. Simple retention policy is $retentionLimit. Deleting oldest $deleteCount backup(s)." 'WARN'
+                    foreach ($oldBackup in $toDelete) {
+                        Log "  Deleting: $($oldBackup.Name)" 'WARN'
+                        Remove-Item -Path $oldBackup.FullName -Recurse -Force
+                    }
                 }
             }
         }

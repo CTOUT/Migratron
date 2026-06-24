@@ -40,9 +40,24 @@
           "type": "STRING",
           "description": "Target folder for backup archives (supports environment variables)"
         },
+        "retentionMode": {
+          "type": "STRING",
+          "enum": ["simple", "gfs"],
+          "description": "Determines the retention strategy. 'simple' keeps the newest N backups. 'gfs' enables Grandfather-Father-Son rotation."
+        },
         "retentionCount": {
           "type": "INTEGER",
-          "description": "Number of backup zip files to keep"
+          "description": "Number of backup zip files to keep when retentionMode is 'simple'."
+        },
+        "gfsRetention": {
+          "type": "OBJECT",
+          "description": "Grandfather-Father-Son limits when retentionMode is 'gfs'.",
+          "properties": {
+            "dailies": { "type": "INTEGER" },
+            "weeklies": { "type": "INTEGER" },
+            "monthlies": { "type": "INTEGER" }
+          },
+          "required": ["dailies", "weeklies", "monthlies"]
         },
         "compress": {
           "type": "BOOLEAN",
