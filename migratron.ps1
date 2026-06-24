@@ -133,6 +133,7 @@ else {
         Write-Host "  [1] Migration Operations (Backup & Restore)"
         Write-Host "  [2] Manage Backups (List & Delete)"
         Write-Host "  [3] Configuration & Automation"
+        Write-Host "  ---" -ForegroundColor DarkGray
         Write-Host "  [Q] Quit"
         Write-Host ""
         
@@ -149,6 +150,7 @@ else {
                     Write-Host "  [1] Backup Settings to ZIP Archive"
                     Write-Host "  [2] Restore Settings from ZIP Archive"
                     Write-Host "  [3] Back to Main Menu"
+                    Write-Host "  ---" -ForegroundColor DarkGray
                     Write-Host "  [Q] Quit"
                     Write-Host ""
                     
@@ -202,6 +204,7 @@ else {
                     Write-Host "  [2] Manage Scheduled Task"
                     Write-Host "  [3] Edit Backup Settings (Retention & Encryption)"
                     Write-Host "  [4] Back to Main Menu"
+                    Write-Host "  ---" -ForegroundColor DarkGray
                     Write-Host "  [Q] Quit"
                     Write-Host ""
                     
@@ -219,6 +222,7 @@ else {
                         Write-Host "  [1] Register Daily Backup Task"
                         Write-Host "  [2] Remove Scheduled Task"
                         Write-Host "  [3] Back to Menu"
+                        Write-Host "  ---" -ForegroundColor DarkGray
                         Write-Host "  [Q] Quit"
                         $taskChoice = Read-Host "Select an option [1-3, Q]"
                         if ($taskChoice -match '^[qQ]$') { return }
@@ -283,6 +287,7 @@ else {
                             }
                             
                             Write-Host "  [$backOpt] Back to Menu"
+                            Write-Host "  ---" -ForegroundColor DarkGray
                             Write-Host "  [Q] Quit"
                             Write-Host ""
                             
@@ -390,6 +395,14 @@ else {
                                     $localCfg.backup.psobject.Properties.Remove("encryptionKey")
                                     Set-LocalConfig -ConfigObject $localCfg
                                 } else {
+                                    $confirmKey = Read-Host -AsSecureString "Confirm new encryption key"
+                                    $plainConfirm = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto([System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($confirmKey))
+                                    if ($plainKey -cne $plainConfirm) {
+                                        Write-Host "Keys do not match. Action cancelled." -ForegroundColor Red
+                                        Start-Sleep -Seconds 2
+                                        continue
+                                    }
+                                    
                                     if ($encEncoded) {
                                         $encodedString = ConvertFrom-SecureString $newKey
                                         $localCfg.backup | Add-Member -MemberType NoteProperty -Name "encryptionKey" -Value $encodedString -Force
@@ -413,6 +426,14 @@ else {
                                     Write-Host "Action cancelled. Encoding unchanged." -ForegroundColor DarkGray
                                     Start-Sleep -Seconds 1
                                 } else {
+                                    $confirmKey = Read-Host -AsSecureString "Confirm encryption key"
+                                    $plainConfirm = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto([System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($confirmKey))
+                                    if ($plainKey -cne $plainConfirm) {
+                                        Write-Host "Keys do not match. Action cancelled." -ForegroundColor Red
+                                        Start-Sleep -Seconds 2
+                                        continue
+                                    }
+                                    
                                     $localCfg.backup | Add-Member -MemberType NoteProperty -Name "encryptionKeyEncoded" -Value $newEncEncoded -Force
                                     if ($newEncEncoded) {
                                         $encodedString = ConvertFrom-SecureString $newKey
