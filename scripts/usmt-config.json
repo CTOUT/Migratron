@@ -1,24 +1,8 @@
 {
   "$schema": "../schemas/usmt-config-schema.json",
-  "usmt": {
-    "customPath": "",
-    "userScope": "current",
-    "users": [],
-    "xmlFiles": ["MigApp.xml", "MigUser.xml", "ExcludeCommon.xml"],
-    "additionalArgs": ["/c", "/v:1", "/efs:skip"]
-  },
   "backup": {
-    "outputDir": "$ONEDRIVE\\MigratronBackups",
-    "retentionMode": "simple",
-    "retentionCount": 5,
-    "gfsRetention": {
-      "dailies": 7,
-      "weeklies": 4,
-      "monthlies": 12
-    },
     "compress": false,
     "encrypt": false,
-    "generateManifest": true,
     "excludePaths": [
       "%OneDrive%",
       "%OneDriveConsumer%",
@@ -30,12 +14,28 @@
       "%USERPROFILE%\\Box Sync",
       "%windir%\\ServiceProfiles"
     ],
+    "generateManifest": true,
+    "gfsRetention": {
+      "dailies": 7,
+      "monthlies": 12,
+      "weeklies": 4
+    },
     "includePaths": ["%USERPROFILE%\\AppData\\LocalLow"],
+    "outputDir": "$ONEDRIVE\\MigratronBackups",
+    "retentionCount": 5,
+    "retentionMode": "simple",
     "waitForSync": true
   },
   "schedule": {
     "taskName": "MigratronSnapshot",
-    "trigger": "Daily",
-    "time": "22:00"
+    "time": "22:00",
+    "trigger": "Daily"
+  },
+  "usmt": {
+    "additionalArgs": ["/c", "/v:1", "/efs:skip"],
+    "customPath": "",
+    "users": [],
+    "userScope": "current",
+    "xmlFiles": ["MigApp.xml", "MigUser.xml", "ExcludeCommon.xml"]
   }
 }
