@@ -35,6 +35,7 @@
       "%LOCALAPPDATA%\\Box",
       "%USERPROFILE%\\Box",
       "%USERPROFILE%\\Box Sync",
+      "%windir%\\ServiceProfiles",
       "D:\\",
       "E:\\UnwantedFolder"
     ],

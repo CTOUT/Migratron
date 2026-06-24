@@ -21,7 +21,8 @@
       "%LOCALAPPDATA%\\Google\\DriveFS",
       "%LOCALAPPDATA%\\Box",
       "%USERPROFILE%\\Box",
-      "%USERPROFILE%\\Box Sync"
+      "%USERPROFILE%\\Box Sync",
+      "%windir%\\ServiceProfiles"
     ],
     "includePaths": [
       "%USERPROFILE%\\AppData\\LocalLow"
