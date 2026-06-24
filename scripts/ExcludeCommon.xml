@@ -8,22 +8,33 @@
           <objectSet>
             <!-- Exclude Microsoft Office temporary, telemetric, and WebView2 caches -->
             <pattern type="File">C:\Users\*\AppData\Local\Microsoft\Office\*\OfficeFileCache\* [*]</pattern>
+            <pattern type="File">C:\Users\*\AppData\Local\Microsoft\Office\*\OfficeFileCache\** [*]</pattern>
             
             <!-- Exclude the Public profile folder entirely (ROMs, shared libraries) -->
             <pattern type="File">C:\Users\Public\* [*]</pattern>
+            <pattern type="File">C:\Users\Public\** [*]</pattern>
             <pattern type="File">C:\Users\*\AppData\Local\Microsoft\Office\*\*\Wef\* [*]</pattern>
+            <pattern type="File">C:\Users\*\AppData\Local\Microsoft\Office\*\*\Wef\** [*]</pattern>
             <pattern type="File">C:\Users\*\AppData\Local\Microsoft\Office\*\*\WebServiceCache\* [*]</pattern>
+            <pattern type="File">C:\Users\*\AppData\Local\Microsoft\Office\*\*\WebServiceCache\** [*]</pattern>
             <pattern type="File">C:\Users\*\AppData\Local\Microsoft\Office\*\*\UsageMetricsStore\* [*]</pattern>
+            <pattern type="File">C:\Users\*\AppData\Local\Microsoft\Office\*\*\UsageMetricsStore\** [*]</pattern>
             <pattern type="File">C:\Users\*\AppData\Local\Microsoft\Office\*\*\*Rules\* [*]</pattern>
+            <pattern type="File">C:\Users\*\AppData\Local\Microsoft\Office\*\*\*Rules\** [*]</pattern>
             
             <!-- Exclude Windows Defender scan history, signatures, and binaries -->
             <pattern type="File">C:\ProgramData\Microsoft\Windows Defender\* [*]</pattern>
+            <pattern type="File">C:\ProgramData\Microsoft\Windows Defender\** [*]</pattern>
             
             <!-- Exclude hardware driver installer packages (machine-specific) -->
             <pattern type="File">C:\AMD\* [*]</pattern>
+            <pattern type="File">C:\AMD\** [*]</pattern>
             <pattern type="File">C:\Intel\* [*]</pattern>
+            <pattern type="File">C:\Intel\** [*]</pattern>
             <pattern type="File">C:\NVIDIA\* [*]</pattern>
+            <pattern type="File">C:\NVIDIA\** [*]</pattern>
             <pattern type="File">C:\Drivers\* [*]</pattern>
+            <pattern type="File">C:\Drivers\** [*]</pattern>
           </objectSet>
         </unconditionalExclude>
       </rules>

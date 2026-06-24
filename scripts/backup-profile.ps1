@@ -85,13 +85,17 @@ if ($config.backup.excludePaths -and $config.backup.excludePaths.Count -gt 0) {
         }
         if ($cleanPath.EndsWith('\')) {
             $patternPath = "${cleanPath}* [*]"
+            $patternPathSub = "${cleanPath}** [*]"
         }
         else {
             $patternPath = "${cleanPath}\* [*]"
+            $patternPathSub = "${cleanPath}\** [*]"
         }
         # --- FIX #4: XML-encode the path before embedding to prevent XML injection ---
         $safePatternPath = [System.Security.SecurityElement]::Escape($patternPath)
+        $safePatternPathSub = [System.Security.SecurityElement]::Escape($patternPathSub)
         $xmlLines += "            <pattern type=`"File`">$safePatternPath</pattern>"
+        $xmlLines += "            <pattern type=`"File`">$safePatternPathSub</pattern>"
     }
     $xmlLines += @(
         '          </objectSet>',
@@ -129,12 +133,16 @@ if ($config.backup.includePaths -and $config.backup.includePaths.Count -gt 0) {
         }
         if ($cleanPath.EndsWith('\')) {
             $patternPath = "${cleanPath}* [*]"
+            $patternPathSub = "${cleanPath}** [*]"
         }
         else {
             $patternPath = "${cleanPath}\* [*]"
+            $patternPathSub = "${cleanPath}\** [*]"
         }
         $safePatternPath = [System.Security.SecurityElement]::Escape($patternPath)
+        $safePatternPathSub = [System.Security.SecurityElement]::Escape($patternPathSub)
         $xmlLines += "            <pattern type=`"File`">$safePatternPath</pattern>"
+        $xmlLines += "            <pattern type=`"File`">$safePatternPathSub</pattern>"
     }
     $xmlLines += @(
         '          </objectSet>',
