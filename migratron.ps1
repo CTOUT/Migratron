@@ -183,7 +183,7 @@ else {
                     }
                     elseif ($opChoice -eq "3") {
                         while ($true) {
-                            Write-Host ""
+                            Show-MenuHeader -Title "Verify Backup Archive"
                             Assert-AdminPrivileges -CallerBoundParameters $PSBoundParameters
                             $path = Get-BackupSelection -ConfigPath (Join-Path $ScriptDir "usmt-config.json")
                             if ([string]::IsNullOrEmpty($path) -or -not (Test-Path $path)) {
