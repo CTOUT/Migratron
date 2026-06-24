@@ -15,9 +15,13 @@ Migratron bridges this gap by wrapping Microsoft's enterprise-grade **User State
 ## Core Features
 
 - **USMT Snapshot Engine** — Leverages Microsoft's `scanstate.exe` and `loadstate.exe` to natively extract and import local profile data (Roaming AppData, registry keys, settings).
+- **Interactive AppData Discovery Wizard** — Scans your `AppData` and `LocalLow` directories to build a beautiful, paginated, responsive terminal dashboard. Manage custom inclusions/exclusions on the fly with OSC 8 clickable hyperlinks and dynamic status indicators.
+- **Aggressive Bloat Filtering** — Ships with `ExcludeCommon.xml` which uses `<unconditionalExclude>` to permanently block massive Microsoft caches (OneDrive, Edge, Office, Copilot) saving ~30GB+ of useless data per backup.
+- **Secure Archive Encryption** — AES-256 encryption via native USMT flags with DPAPI-encoded SecureString key storage, ensuring your backups remain secure without storing passwords in plaintext.
 - **OneDrive Integration** — Automatically targets your local OneDrive consumer or commercial sync directory to sync the backups securely to the cloud.
+- **Advanced GFS Retention Management** — Supports Grandfather-Father-Son (GFS) rotation schemes (Daily/Weekly/Monthly) alongside standard integer pruning.
 - **Automated Scheduled Tasks** — Registers an elevated Windows Scheduled Task running under your user credentials to run daily backups at a scheduled time, on user logon, or during idle states.
-- **Backup Retention Management** — Automatically prunes older backups, keeping only the last $N$ snapshots (configured in `usmt-config.json`).
+- **Archive Contents HTML Viewer** — Parse the raw USMT manifest to generate a filterable, offline HTML dashboard showing exactly what was captured in the archive.
 - **Dry Run Support** — Previews USMT execution arguments and paths without committing changes or running scan/load routines.
 - **Interactive & Scriptable CLI** — Provides a central command wrapper [migratron.ps1](migratron.ps1) that launches a console menu when run without parameters, alongside automated switches.
 - **PowerShell 5.1 & 7 Compatible** — Self-elevation and scheduled task registration detect the current host at runtime (`pwsh.exe` vs `powershell.exe`) so elevated sessions always use the same shell.

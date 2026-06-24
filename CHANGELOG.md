@@ -11,6 +11,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [v1.3.0] — 2026-06-24
+
+### Added
+
+- **Interactive Discovery Wizard Dashboard** — Upgraded the AppData discovery tool into an interactive, paginated terminal dashboard featuring active status indicators and OSC 8 clickable path hyperlinks.
+- **In-Wizard Exclusions** — Users can now natively include (`i <id>`), exclude (`e <id>`), or remove (`r <id>`) paths directly within the discovery wizard loop.
+- **Global Microsoft Bloat Exclusions** — Added `<unconditionalExclude>` rules to `ExcludeCommon.xml` permanently blocking massively bloated Microsoft telemetry and client caches (e.g., `OneDrive`, `Edge`, `Olk`, `Office`, `Copilot`), saving ~30GB per backup.
+- **Manage Custom Exclusions Menu** — Added `manage-excludes.ps1` and `Option 7` to the interactive CLI to manage custom `excludePaths` in `usmt-config.local.json`.
+
+---
+
 ## [v1.2.0] — 2026-06-24
 
 ### Added
