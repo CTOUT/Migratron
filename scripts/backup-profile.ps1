@@ -69,7 +69,7 @@ if ($config.backup.excludePaths -and $config.backup.excludePaths.Count -gt 0) {
     $xmlLines = @(
         '<?xml version="1.0" encoding="UTF-8"?>',
         '<migration urlid="http://www.microsoft.com/migration/1.0/migxmlext/ExcludeCustom">',
-        '  <component type="Documents" context="UserAndSystem">',
+        '  <component type="Documents" context="User">',
         '    <displayName>Custom User Exclusions</displayName>',
         '    <role role="Data">',
         '      <rules>',
@@ -118,7 +118,7 @@ if ($config.backup.includePaths -and $config.backup.includePaths.Count -gt 0) {
     $xmlLines = @(
         '<?xml version="1.0" encoding="UTF-8"?>',
         '<migration urlid="http://www.microsoft.com/migration/1.0/migxmlext/IncludeCustom">',
-        '  <component type="Documents" context="UserAndSystem">',
+        '  <component type="Documents" context="User">',
         '    <displayName>Custom User Inclusions</displayName>',
         '    <role role="Data">',
         '      <rules>',
