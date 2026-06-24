@@ -137,7 +137,9 @@ function Convert-ToUsmtPath {
     
     # Translate absolute paths into USMT CSIDL variables.
     # USMT ignores absolute paths pointing inside a user profile, so they must be translated.
-    $usmtPath = $ResolvedPath -ireplace [regex]::Escape($env:LOCALAPPDATA), '%CSIDL_LOCAL_APPDATA%'
+    $localLowPath = Join-Path $env:USERPROFILE "AppData\LocalLow"
+    $usmtPath = $ResolvedPath -ireplace [regex]::Escape($localLowPath), '%CSIDL_PROFILE%\AppData\LocalLow'
+    $usmtPath = $usmtPath -ireplace [regex]::Escape($env:LOCALAPPDATA), '%CSIDL_LOCAL_APPDATA%'
     $usmtPath = $usmtPath -ireplace [regex]::Escape($env:APPDATA), '%CSIDL_APPDATA%'
     $usmtPath = $usmtPath -ireplace [regex]::Escape($env:USERPROFILE), '%CSIDL_PROFILE%'
     $usmtPath = $usmtPath -ireplace [regex]::Escape($env:windir), '%CSIDL_WINDOWS%'
