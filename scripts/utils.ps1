@@ -450,7 +450,7 @@ function Get-BackupSelection {
     $config = Get-UsmtConfig -ConfigPath $ConfigPath
     if ($null -eq $config) { return $null }
     
-    $outputDir = if (-not [string]::IsNullOrEmpty($config.backup.outputDirectory)) { $config.backup.outputDirectory } else { "MigratronBackups" }
+    $outputDir = if (-not [string]::IsNullOrEmpty($config.backup.outputDir)) { $config.backup.outputDir } else { "MigratronBackups" }
     $outputDirResolved = Resolve-PathVariables -Path $outputDir
     
     if (-not [System.IO.Path]::IsPathRooted($outputDirResolved)) {
