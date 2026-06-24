@@ -384,6 +384,37 @@ else {
                                     $localCfg.backup.psobject.Properties.Remove("encrypt")
                                 } else {
                                     $val = if ($newEnc -match '^y') { $true } else { $false }
+                                    if ($val -and $hasKey -ne "Yes") {
+                                        while ($true) {
+                                            $newKey = Read-Host -AsSecureString "Enter encryption key to enable (leave empty to cancel)"
+                                            $plainKey = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto([System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($newKey))
+                                            
+                                            if ([string]::IsNullOrWhiteSpace($plainKey)) {
+                                                Write-Host "No key provided. Encryption will remain disabled." -ForegroundColor Yellow
+                                                $val = $false
+                                                Start-Sleep -Seconds 2
+                                                break
+                                            } else {
+                                                $confirmKey = Read-Host -AsSecureString "Confirm encryption key"
+                                                $plainConfirm = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto([System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($confirmKey))
+                                                if ($plainKey -cne $plainConfirm) {
+                                                    Write-Host "Keys do not match. Please try again." -ForegroundColor Red
+                                                    Write-Host ""
+                                                    continue
+                                                }
+                                                
+                                                if ($encEncoded) {
+                                                    $encodedString = ConvertFrom-SecureString $newKey
+                                                    $localCfg.backup | Add-Member -MemberType NoteProperty -Name "encryptionKey" -Value $encodedString -Force
+                                                } else {
+                                                    $localCfg.backup | Add-Member -MemberType NoteProperty -Name "encryptionKey" -Value $plainKey -Force
+                                                }
+                                                Write-Host "Encryption key set successfully." -ForegroundColor Green
+                                                Start-Sleep -Seconds 1
+                                                break
+                                            }
+                                        }
+                                    }
                                     $localCfg.backup | Add-Member -MemberType NoteProperty -Name "encrypt" -Value $val -Force
                                 }
                                 Set-LocalConfig -ConfigObject $localCfg
