@@ -123,7 +123,7 @@ if ($hasSwitch) {
 }
 else {
     # No switches: run interactive menu
-    while ($true) {
+    :MainMenu while ($true) {
         Clear-Host
         Write-Host "==================================================" -ForegroundColor Magenta
         Write-Host "                 M I G R A T R O N                " -ForegroundColor Magenta
@@ -221,10 +221,11 @@ else {
                         Write-Host "Manage Scheduled Task:" -ForegroundColor Magenta
                         Write-Host "  [1] Register Daily Backup Task"
                         Write-Host "  [2] Remove Scheduled Task"
-                        Write-Host "  [3] Back to Menu"
+                        Write-Host "  [3] Back to Configuration Menu"
+                        Write-Host "  [4] Back to Main Menu"
                         Write-Host "  ---" -ForegroundColor DarkGray
                         Write-Host "  [Q] Quit"
-                        $taskChoice = Read-Host "Select an option [1-3, Q]"
+                        $taskChoice = Read-Host "Select an option [1-4, Q]"
                         if ($taskChoice -match '^[qQ]$') { return }
                         elseif ($taskChoice -eq "1") {
                             $timeVal = Read-Host "Enter daily backup time (e.g. 22:00)"
@@ -244,6 +245,8 @@ else {
                         } elseif ($taskChoice -eq "2") {
                             & (Join-Path $ScriptDir "schedule-task.ps1") -Unregister
                             Read-Host "`nPress Enter to return to menu..."
+                        } elseif ($taskChoice -eq "4") {
+                            continue MainMenu
                         }
                     }
                     elseif ($cfgChoice -eq "3") {
@@ -293,12 +296,14 @@ else {
                                 }
                             }
                             
-                            Write-Host "  [$backOpt] Back to Menu"
+                            $mainOpt = $backOpt + 1
+                            Write-Host "  [$backOpt] Back to Configuration Menu"
+                            Write-Host "  [$mainOpt] Back to Main Menu"
                             Write-Host "  ---" -ForegroundColor DarkGray
                             Write-Host "  [Q] Quit"
                             Write-Host ""
                             
-                            $editChoice = Read-Host "Select an option [1-$backOpt, Q]"
+                            $editChoice = Read-Host "Select an option [1-$mainOpt, Q]"
                             if ($editChoice -match '^[qQ]$') { return }
                             elseif ($editChoice -eq "1") {
                                 $newMode = Read-Host "Enter retention mode (simple/gfs, or leave empty to clear override)"
@@ -527,6 +532,7 @@ else {
                                 Read-Host "`nPress Enter to continue..."
                             }
                             elseif ($editChoice -eq "$backOpt") { break }
+                            elseif ($editChoice -eq "$mainOpt") { continue MainMenu }
                         }
                     }
                     elseif ($cfgChoice -eq "4") { break }
