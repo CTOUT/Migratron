@@ -95,11 +95,53 @@ function Get-UsmtConfig {
                 }
             }
         }
+        
+        # DPAPI Decryption for Encoded Keys
+        if ($null -ne $json.backup.encryptionKeyEncoded -and $json.backup.encryptionKeyEncoded -eq $true -and -not [string]::IsNullOrEmpty($json.backup.encryptionKey)) {
+            try {
+                $secureStr = ConvertTo-SecureString $json.backup.encryptionKey
+                $bstr = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureStr)
+                $plainText = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($bstr)
+                [System.Runtime.InteropServices.Marshal]::ZeroFreeBSTR($bstr)
+                $json.backup.encryptionKey = $plainText
+            }
+            catch {
+                Log "Failed to decrypt DPAPI encryptionKey. Ensure the key was encoded on this machine by this user." 'ERROR'
+                $json.backup.encryptionKey = ""
+            }
+        }
+        
         return $json
     }
     catch {
         throw "Failed to parse JSON config: $_"
     }
+}
+
+function Get-LocalConfig {
+    param([string]$ConfigPath = (Join-Path $PSScriptRoot "usmt-config.local.json"))
+    if (Test-Path $ConfigPath) {
+        return (Get-Content $ConfigPath -Raw | ConvertFrom-Json)
+    }
+    
+    # Return empty structured PSCustomObject if file doesn't exist
+    $obj = New-Object PSObject
+    $obj | Add-Member -MemberType NoteProperty -Name "backup" -Value (New-Object PSObject)
+    $obj | Add-Member -MemberType NoteProperty -Name "usmt" -Value (New-Object PSObject)
+    return $obj
+}
+
+function Set-LocalConfig {
+    param(
+        [Parameter(Mandatory=$true)]$ConfigObject, 
+        [string]$ConfigPath = (Join-Path $PSScriptRoot "usmt-config.local.json")
+    )
+    # ConvertTo-Json truncates without Depth. 10 is safe for usmt-config.
+    $jsonString = $ConfigObject | ConvertTo-Json -Depth 10
+    
+    # Use UTF8NoBOM
+    $utf8NoBom = New-Object System.Text.UTF8Encoding $false
+    [System.IO.File]::WriteAllText($ConfigPath, $jsonString, $utf8NoBom)
 }
 #endregion
 
