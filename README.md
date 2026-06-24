@@ -67,12 +67,10 @@ Launch the toolkit without parameters to access the dashboard. If you pick an op
      Windows Settings Migration Toolkit (USMT)
 ==================================================
 
-  [1] Scan and Audit Local Settings
-  [2] List Existing Backups
-  [3] Backup Settings to ZIP Archive (Requires Admin)
-  [4] Restore Settings from ZIP Archive (Requires Admin)
-  [5] Manage Automatic Scheduled Task (Requires Admin)
-  [6] Exit
+  [1] Migration Operations (Backup & Restore)
+  [2] Manage Backups (List & Delete)
+  [3] Configuration & Automation
+  [Q] Quit
 ```
 
 ### 2. Command Line CLI Usage
@@ -162,8 +160,9 @@ You can customise USMT settings, folders, and rules by editing [usmt-config.json
 | `outputDir`      | string   | `$ONEDRIVE\MigratronBackups` | Target directory for backup archives. Supports environment variables (`$HOME`, `$APPDATA`, `$ONEDRIVE`, etc.).                                                        |
 | `retentionCount` | integer  | `5`                          | Number of backup ZIP files to retain. Older archives are pruned automatically after each successful backup.                                                           |
 | `compress`       | boolean  | `false`                      | Compress the USMT migration store into a ZIP archive after capture.                                                                                                   |
-| `encrypt`        | boolean  | `false`                      | Placeholder for future encryption support. A runtime warning is emitted when this is `false`.                                                                         |
+| `encrypt`        | boolean  | `false`                      | Secures the USMT migration store using native AES-256 encryption. Requires `encryptionKey` to be set in `usmt-config.local.json`.                                     |
 | `excludePaths`   | string[] | `[]`                         | Directories or drive roots to recursively exclude (e.g. `["D:\\", "C:\\LargeFolder"]`). Dynamically generates a USMT exclusion XML (`ExcludeCustom.xml`) on each run. |
+| `includePaths`   | string[] | `[]`                         | Explicit paths to unconditionally capture (e.g. `["%USERPROFILE%\\AppData\\LocalLow"]`). Dynamically generates a USMT inclusion XML (`IncludeCustom.xml`).            |
 
 ### `schedule` section
 
@@ -179,9 +178,9 @@ To prevent backing up gigabytes of unnecessary data (like games, caches, or soft
 
 1. **Universal Exclusions (`ExcludeCommon.xml`)**: Exclusions shared by all setups (Windows Defender scan history, Microsoft Office WebView2/telemetry caches, hardware driver installers like `C:\AMD` or `C:\Intel`, and the `C:\Users\Public` folder).
 2. **User-Specific Configuration (`usmt-config.local.json`)**: To prevent local customisations from being tracked by Git, you can create a local override file.
-   - Simply copy the template [usmt-config.local.json.example](scripts/usmt-config.local.json.example) to `usmt-config.local.json` in the same directory.
-   - Add your custom folders or drive letters to the `"excludePaths"` list (e.g. `"D:\\"` or `"C:\\LargeFolder"`).
-   - This file is gitignored and will override the default settings in `usmt-config.json`.
+   - You can manage settings via the Interactive Menu under **Configuration & Automation**, or manually edit `usmt-config.local.json`.
+   - Use this file to set specific `"excludePaths"` or `"includePaths"`.
+   - Security configurations like `"encryptionKey"` and `"encryptionKeyEncoded"` (which securely stores your password via Windows DPAPI hardware encryption) are strictly isolated to this local file.
 3. **Backup Audit Trail**: Every successful snapshot packages a copy of the active XML configuration manifests in a `USMT-XML/` subdirectory within the backup store directory, ensuring you always know what rules were applied.
 
 ### Secondary Drive Audit

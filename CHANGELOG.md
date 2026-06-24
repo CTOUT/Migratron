@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Secure Archive Encryption** — Implemented AES_256 encryption via native USMT flags when `encrypt: true`. Supported plain-text passwords and Windows DPAPI encoded SecureStrings via the new `encryptionKeyEncoded` parameter.
+- **Advanced GFS Retention Policy** — Introduced Grandfather-Father-Son rotation scheme (dailies, weeklies, monthlies) as an alternative to simple rolling retention, allowing long-term historical snapshots for disaster recovery.
+- **Archive Contents Viewer** — Built an interactive HTML manifest viewer generation script (`generate-viewer.ps1`) that parses the raw USMT manifest and outputs a searchable, filterable HTML report of captured settings and files.
+- **Interactive CLI Enhancements** — Overhauled the console menu (`migratron.ps1`) into nested submenus. Added interactive menus to manage scheduled tasks, toggle backup retention types (Simple vs GFS), manage encryption keys (including SecureString DPAPI encoding), and configure counts. Added a global `[Q] Quit` hotkey.
+- **Include Paths Mode (`backup.includePaths`)** — Added explicit local capture paths (e.g., `AppData\LocalLow`) via auto-generated `IncludeCustom.xml` using `<unconditionalInclude>` rules.
+- **Interactive Deletion** — Added `-InteractiveDelete` to `list-backups.ps1`, allowing users to select and delete specific backup folders by number.
+
+### Fixed
+- **Encryption Key Encoding Bugs** — Fixed an issue where PowerShell's `Out-File` injected UTF-8 BOMs and CRLF terminators into the temporary encryption key file, causing USMT decryption verification (Return Code 37) to fail. Now uses `[System.IO.File]::WriteAllText` with `UTF8NoBOM`.
+
 ---
 
 ## [v1.0.0] — 2026-06-23
