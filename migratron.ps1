@@ -293,29 +293,28 @@ else {
                                 }
                             }
                             elseif ($editChoice -eq "4") {
-                                $encEncoded = -not $encEncoded
-                                $localCfg.backup | Add-Member -MemberType NoteProperty -Name "encryptionKeyEncoded" -Value $encEncoded -Force
+                                $newEncEncoded = -not $encEncoded
                                 
-                                if (-not [string]::IsNullOrEmpty($localCfg.backup.encryptionKey)) {
-                                    if ($encEncoded) {
-                                        $sec = ConvertTo-SecureString $localCfg.backup.encryptionKey -AsPlainText -Force
-                                        $encodedString = ConvertFrom-SecureString $sec
-                                        $localCfg.backup.encryptionKey = $encodedString
-                                        Write-Host "Key encoded to DPAPI SecureString." -ForegroundColor Green
+                                Write-Host ""
+                                Write-Host "Changing key encoding requires re-entering your encryption key." -ForegroundColor Yellow
+                                $newKey = Read-Host -AsSecureString "Enter encryption key (leave empty to cancel)"
+                                $plainKey = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto([System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($newKey))
+                                
+                                if ([string]::IsNullOrWhiteSpace($plainKey)) {
+                                    Write-Host "Action cancelled. Encoding unchanged." -ForegroundColor DarkGray
+                                    Start-Sleep -Seconds 1
+                                } else {
+                                    $localCfg.backup | Add-Member -MemberType NoteProperty -Name "encryptionKeyEncoded" -Value $newEncEncoded -Force
+                                    if ($newEncEncoded) {
+                                        $encodedString = ConvertFrom-SecureString $newKey
+                                        $localCfg.backup | Add-Member -MemberType NoteProperty -Name "encryptionKey" -Value $encodedString -Force
                                     } else {
-                                        try {
-                                            $sec = ConvertTo-SecureString $localCfg.backup.encryptionKey
-                                            $plainKey = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto([System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($sec))
-                                            $localCfg.backup.encryptionKey = $plainKey
-                                            Write-Host "Key decoded to Plaintext." -ForegroundColor Yellow
-                                        } catch {
-                                            Write-Host "Failed to decrypt existing key. Key cleared." -ForegroundColor Red
-                                            $localCfg.backup.encryptionKey = ""
-                                        }
+                                        $localCfg.backup | Add-Member -MemberType NoteProperty -Name "encryptionKey" -Value $plainKey -Force
                                     }
+                                    Set-LocalConfig -ConfigObject $localCfg
+                                    Write-Host "Encoding toggled and key updated successfully." -ForegroundColor Green
+                                    Start-Sleep -Seconds 1
                                 }
-                                Set-LocalConfig -ConfigObject $localCfg
-                                Start-Sleep -Seconds 1
                             }
                             elseif ($editChoice -eq "5") { break }
                         }
