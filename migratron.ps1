@@ -393,7 +393,10 @@ else {
                                 $plainKey = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto([System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($newKey))
                                 if ([string]::IsNullOrWhiteSpace($plainKey)) {
                                     $localCfg.backup.psobject.Properties.Remove("encryptionKey")
+                                    $localCfg.backup | Add-Member -MemberType NoteProperty -Name "encrypt" -Value $false -Force
                                     Set-LocalConfig -ConfigObject $localCfg
+                                    Write-Host "Encryption key cleared and encryption disabled." -ForegroundColor Yellow
+                                    Start-Sleep -Seconds 1
                                 } else {
                                     $confirmKey = Read-Host -AsSecureString "Confirm new encryption key"
                                     $plainConfirm = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto([System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($confirmKey))
