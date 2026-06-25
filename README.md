@@ -20,7 +20,8 @@ Migratron bridges this gap by wrapping Microsoft's enterprise-grade **User State
 - **Secure Archive Encryption** — AES-256 encryption via native USMT flags with DPAPI-encoded SecureString key storage, ensuring your backups remain secure without storing passwords in plaintext.
 - **OneDrive Integration** — Automatically targets your local OneDrive consumer or commercial sync directory to sync the backups securely to the cloud.
 - **Advanced GFS Retention Management** — Supports Grandfather-Father-Son (GFS) rotation schemes (Daily/Weekly/Monthly) alongside standard integer pruning.
-- **Automated Scheduled Tasks** — Registers an elevated Windows Scheduled Task running under your user credentials to run daily backups at a scheduled time, on user logon, or during idle states.
+- **Automated Scheduled Tasks** — Registers an elevated Windows Scheduled Task running under your user credentials to run daily backups at a scheduled time, or on user logon.
+- **Smart Background Agent** — A lightweight, zero-impact background agent (`migratron-agent.ps1`) that sits in your System Tray. It intelligently polls user idle time using native `GetLastInputInfo` and hooks into `ntdll.dll` to instantly suspend running USMT backups if you return to the keyboard, dropping CPU usage to 0% and resuming when you walk away.
 - **Archive Contents HTML Viewer** — Parse the raw USMT manifest to generate a filterable, offline HTML dashboard showing exactly what was captured in the archive.
 - **Dry Run Support** — Previews USMT execution arguments and paths without committing changes or running scan/load routines.
 - **Interactive & Scriptable CLI** — Provides a central command wrapper [migratron.ps1](migratron.ps1) that launches a console menu when run without parameters, alongside automated switches.
@@ -38,14 +39,14 @@ USMT is part of the **Windows Assessment and Deployment Kit (ADK)**. You must ha
    - Go to the [Official Microsoft ADK Portal](https://learn.microsoft.com/en-us/windows-hardware/get-started/adk-install).
    - **Download the ADK version that matches your Windows OS version** (using an incompatible version can cause USMT failures).
    - **Download and apply any recommended ADK servicing patches** (e.g., KB5079391 or later updates) listed on the portal.
-   - Run the ADK installer and select **only** the **User State Migration Tool (USMT)** component (you should deselect all other features that are checked by default, as they are not needed for Migratron).
+   - Run the ADK installer and select **only** the **User State Migration Tool (USMT)** component (you should deselect all other features that are checked by default, as they are not needed for Migratron - unless you need those features for something else you are using of course).
 
      ![Windows ADK installer with only the User State Migration Tool (USMT) component selected](docs/images/adk-usmt-install.png)
 
    - Migratron will automatically detect the correct architecture (`amd64`, `arm64`, or `x86`) in the default ADK directory:
      `C:\Program Files (x86)\Windows Kits\10\Assessment and Deployment Kit\User State Migration Tool\<arch>`
 
-   > **⚠️ IMPORTANT WARNING**: Do **NOT** use `winget install Microsoft.WindowsADK` to install the ADK. `winget` will automatically grab the absolute latest version available on Microsoft's servers, which is often an Insider Preview or a version completely incompatible with your specific Windows build. This will cause USMT to crash or fail to capture data. Always manually download the ADK version that matches your installed Windows OS version.
+   > **⚠️ IMPORTANT WARNING**: Do **NOT** use `winget install Microsoft.WindowsADK` to install the ADK. `winget` will automatically grab the absolute latest version available on Microsoft's servers, which is often an Insider Preview or a version completely incompatible with your specific Windows build. This will cause USMT to crash or fail to capture data. Additionally, installing via winget will pre-install many other features that you may not require. Always manually download the ADK version that matches your installed Windows OS version. Once installed manually, it is highly recommended to run `winget pin add --id Microsoft.WindowsADK` to prevent winget from unexpectedly upgrading it to an incompatible version in the future.
 
 2. **Self-Contained Repository (Portable)**:
    - If you want a self-contained setup, copy the architecture folder (e.g., `amd64` or `arm64`) from an ADK installation and paste it into a folder named `usmt` inside this repository: `Migratron/usmt/amd64/` (or `arm64/`).
@@ -137,7 +138,10 @@ You can use the included `usmtutils.exe` to manually extract files directly from
 # Register a task that triggers whenever you log on
 .\migratron.ps1 -RegisterTask -TriggerType AtLogon
 
-# Remove the scheduled task
+# Register the Smart Background Agent (System Tray) to run backups silently during idle time
+.\migratron.ps1 -RegisterAgent
+
+# Remove the scheduled tasks / background agent
 .\migratron.ps1 -UnregisterTask
 ```
 
@@ -192,7 +196,7 @@ To prevent backing up gigabytes of unnecessary data (like games, caches, or soft
 Migratron includes interactive wizards to help you securely discover and manage your custom inclusions (`usmt-config.local.json`):
 
 - **Discovery Wizard** (`[5] Discover & Add Custom AppData`): Scans your local `AppData` and `Saved Games` folders, automatically recommending configurations to include while aggressively filtering out GBs of caches, temp files, and node modules.
-- **Path Management Wizard** (`[6] Manage Included Custom Paths`): Review your explicit inclusions list in an alphabetised UI and surgically prune items using a multi-select interface.
+- **Path Management Wizards** (`[6]` and `[7]`): Review your explicit inclusions and exclusions lists in an alphabetised UI and surgically prune items using a multi-select interface.
 
 ### Secondary Drive Audit
 
@@ -222,7 +226,13 @@ Migratron/
 │   ├── list-backups.ps1            # Lists available compressed and uncompressed backup stores
 │   ├── backup-profile.ps1          # Invokes ScanState and packages snapshots
 │   ├── restore-profile.ps1         # Invokes LoadState to restore snapshots
+│   ├── verify-backup.ps1           # Interactively mounts and verifies backup archives
+│   ├── discover-appdata.ps1        # Interactive discovery wizard for AppData/SavedGames
+│   ├── manage-paths.ps1            # Interactive UI for managing custom included paths
+│   ├── manage-excludes.ps1         # Interactive UI for managing custom excluded paths
+│   ├── migratron-agent.ps1         # Smart Background Agent (Idle polling, Suspend/Resume)
 │   └── schedule-task.ps1           # Registers/unregisters Windows Scheduled Tasks
+├── .agents/                        # AI Assistant customizations (Skills, Codebase Rules)
 ├── migratron.ps1                   # Main entry point and interactive CLI menu
 ├── cspell.json                     # CSpell spell-check configuration (en-GB)
 ├── README.md                       # Project documentation

@@ -7,7 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [Unreleased]
+## [v1.4.1] — 2026-06-25
+
+### Added
+
+- **Audit Workflow Skill** — Created `.agents/skills/audit-workflow/SKILL.md` to formally codify the codebase audit procedure for Security, Accessibility, Usability, and KISS/DRY principles.
+
+### Changed
+
+- **Documentation** — Refined the Windows ADK installation instructions in the README to explicitly advise running `winget pin add --id Microsoft.WindowsADK` after a manual installation, preventing unexpected background updates to incompatible Insider versions. Also clarified that users may wish to leave other ADK features checked if they use them for external workflows.
+- **Documentation** — Completely audited the `README.md` to formally document recent additions to the project architecture, including the Smart Background Agent (`migratron-agent.ps1`), the AI Workspace Customizations folder (`.agents/`), and the new interactive path management wizards (`manage-excludes.ps1`).
+- **Accessibility Color Sweep** — Replaced all instances of `DarkGray` terminal output with `Gray` to adhere to WCAG contrast ratio guidelines on black terminals.
+- **Config Caching (KISS)** — Implemented global caching for `Get-UsmtConfig` in `utils.ps1` to prevent redundant JSON parsing during deep interactive menu loops.
+- **Redundant Privilege Checks (DRY)** — Stripped redundant `Assert-AdminPrivileges` calls from the main menu loop (`migratron.ps1`), centralizing elevation enforcement safely inside the respective module scripts.
+- **Time Validation Security** — Strengthened the Regex bounds for user-provided Scheduled Task times from `^\d{2}:\d{2}$` to strict 24-hour validation `^([01][0-9]|2[0-3]):[0-5][0-9]$`.
 
 ---
 

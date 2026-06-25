@@ -49,6 +49,17 @@ if (-not $DryRun -and -not (Test-Path $outputDirResolved)) {
     Log "Created backup output directory: $outputDirResolved"
 }
 
+# --- Garbage Collection ---
+# If the PC lost power or the script was forcefully killed, old staging folders might remain in TEMP.
+# Sweep and delete any orphaned folders from previous runs before starting a new one.
+$orphanedStores = Get-ChildItem -Path $env:TEMP -Filter "migratron-temp-store-*" -Directory -ErrorAction SilentlyContinue
+if ($orphanedStores) {
+    Log "Garbage Collection: Shredding $($orphanedStores.Count) orphaned temp folder(s) from previously interrupted backups..." 'WARN'
+    foreach ($orphan in $orphanedStores) {
+        Remove-Item -Path $orphan.FullName -Recurse -Force -ErrorAction SilentlyContinue | Out-Null
+    }
+}
+
 # --- FIX #8: Use $env:TEMP for staging so orphaned data does not remain in the repo ---
 $StagingStore = Join-Path $env:TEMP "migratron-temp-store-$timestamp"
 $logFile      = Join-Path $env:TEMP "scanstate-$timestamp.log"

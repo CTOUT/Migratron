@@ -59,7 +59,7 @@ if ($Register) {
     $trigger = switch ($TriggerType) {
         "Daily" {
             # Check time format (HH:mm)
-            if ($Time -notmatch '^\d{2}:\d{2}$') {
+            if ($Time -notmatch '^([01][0-9]|2[0-3]):[0-5][0-9]$') {
                 Log "Invalid time format '$Time'. Defaulting to 22:00." 'WARN'
                 $Time = "22:00"
             }

@@ -169,7 +169,7 @@ while ($true) {
         $filtPad = $item.FormatFilteredSize.PadRight(10)
         
         $statusStr = "[ - ]"
-        $statusColor = "DarkGray"
+        $statusColor = "Gray"
         if ($currentIncludes -contains $item.VarPath) {
             $statusStr = "[INC]"
             $statusColor = "Green"
@@ -217,7 +217,7 @@ while ($true) {
     }
 
     if ($selection -match '(?i)^(q|quit|exit)$') {
-        Write-Host "[-] Finished discovery." -ForegroundColor DarkGray
+        Write-Host "[-] Finished discovery." -ForegroundColor Gray
         return
     }
 

@@ -15,7 +15,7 @@ while ($true) {
     }
     
     if ($paths.Count -eq 0) {
-        Write-Host "[-] No custom paths currently configured.`n" -ForegroundColor DarkGray
+        Write-Host "[-] No custom paths currently configured.`n" -ForegroundColor Gray
         $choice = Read-Host "Press Enter to return"
         return
     }
