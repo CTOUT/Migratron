@@ -2,6 +2,7 @@
 param(
     [switch]$Register,
     [switch]$Unregister,
+    [switch]$Agent,
     [string]$TaskName = "MigratronSnapshot",
     [ValidateSet('Daily', 'AtLogon', 'OnIdle')]
     [string]$TriggerType = "Daily",
@@ -38,8 +39,15 @@ if ($Register) {
     Step "Registering Migratron Scheduled Task"
     
     # 1. Define the action to run PowerShell script
-    $scriptPath = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot "..\migratron.ps1"))
-    $arguments  = "-WindowStyle Hidden -NoProfile -ExecutionPolicy RemoteSigned -File `"$scriptPath`" -Backup"
+    if ($Agent) {
+        $scriptPath = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot "migratron-agent.ps1"))
+        $arguments  = "-WindowStyle Hidden -NoProfile -ExecutionPolicy RemoteSigned -File `"$scriptPath`""
+        $TriggerType = "AtLogon"
+        $TaskName = "MigratronAgent"
+    } else {
+        $scriptPath = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot "..\migratron.ps1"))
+        $arguments  = "-WindowStyle Hidden -NoProfile -ExecutionPolicy RemoteSigned -File `"$scriptPath`" -Backup"
+    }
 
     # Register the task using the same PowerShell host that is currently running
     # (pwsh.exe for PS 7+, powershell.exe for Windows PowerShell 5.1)
@@ -81,10 +89,13 @@ if ($Register) {
         $settings.IdleSettings.WaitTimeout = New-TimeSpan -Hours 1
     }
     
-    # Remove existing task first if it exists
-    if (Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue) {
-        Log "Removing existing scheduled task: $TaskName" 'DEBUG'
-        Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false
+    # Remove existing conflicting tasks first
+    $tasksToRemove = @($config.schedule.taskName, "MigratronAgent", $TaskName) | Select-Object -Unique
+    foreach ($t in $tasksToRemove) {
+        if (Get-ScheduledTask -TaskName $t -ErrorAction SilentlyContinue) {
+            Log "Removing existing scheduled task: $t" 'DEBUG'
+            Unregister-ScheduledTask -TaskName $t -Confirm:$false
+        }
     }
     
     # Register the task

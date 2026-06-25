@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
     Migratron - Windows Settings Migration Toolkit (USMT Edition)
-    Version: 1.3.0
+    Version: 1.4.0
 
 .DESCRIPTION
     A lightweight utility that wraps Windows User State Migration Tool (USMT)
@@ -251,12 +251,13 @@ else {
                         Assert-AdminPrivileges -CallerBoundParameters $PSBoundParameters
                         Write-Host "Manage Scheduled Task:" -ForegroundColor Magenta
                         Write-Host "  [1] Register Daily Backup Task"
-                        Write-Host "  [2] Remove Scheduled Task"
-                        Write-Host "  [3] Back to Configuration Menu"
+                        Write-Host "  [2] Register Smart Background Agent"
+                        Write-Host "  [3] Remove Scheduled Task"
+                        Write-Host "  [4] Back to Configuration Menu"
                         Write-Host "  ---" -ForegroundColor DarkGray
                         Write-Host "  [M] Back to Main Menu"
                         Write-Host "  [Q] Quit"
-                        $taskChoice = Read-Host "Select an option [1-3, M, Q]"
+                        $taskChoice = Read-Host "Select an option [1-4, M, Q]"
                         if ($taskChoice -match '^[qQ]$') { return }
                         elseif ($taskChoice -match '^[mM]$') { continue MainMenu }
                         elseif ($taskChoice -eq "1") {
@@ -275,6 +276,9 @@ else {
                             & (Join-Path $ScriptDir "schedule-task.ps1") @params
                             Read-Host "`nPress Enter to return to menu..."
                         } elseif ($taskChoice -eq "2") {
+                            & (Join-Path $ScriptDir "schedule-task.ps1") -Register -Agent
+                            Read-Host "`nPress Enter to return to menu..."
+                        } elseif ($taskChoice -eq "3") {
                             & (Join-Path $ScriptDir "schedule-task.ps1") -Unregister
                             Read-Host "`nPress Enter to return to menu..."
                         }

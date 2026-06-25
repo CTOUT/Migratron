@@ -1,5 +1,10 @@
 {
   "$schema": "../schemas/usmt-config-schema.json",
+  "agent": {
+    "idleMinutesThreshold": 15,
+    "interceptShutdown": true,
+    "showTrayIcon": true
+  },
   "backup": {
     "compress": false,
     "encrypt": false,

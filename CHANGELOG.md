@@ -11,6 +11,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [v1.4.0] — 2026-06-25
+
+---
+
+## [v1.4.0] — 2026-06-25
+
+### Added
+
+- **Smart Service Layer** — Built `migratron-agent.ps1`, a lightweight background agent that intelligently polls user idle time using `GetLastInputInfo` and hooks into Windows `WM_QUERYENDSESSION` to guarantee zero-impact backups.
+- **Process Suspension Hooks** — Integrated native `ntdll.dll` hooks into the agent to instantly suspend running USMT backups if the user returns to the keyboard, dropping CPU usage to 0% and resuming when idle.
+- **Agent Context Menu** — Added a dynamic System Tray icon that reports live status (Idle, Running Backup, Paused) and tracks the last successful backup timestamp dynamically.
+- **Workspace Customizations** — Introduced `.agents` folder for AI Agent Rules (`AGENTS.md`) and Skills (`SKILL.md`), formally codifying definition-of-done and release procedures.
+
+### Changed
+
+- **Schedule Task Logic** — Upgraded `schedule-task.ps1` and `migratron.ps1` to natively support installing and running the new Smart Agent, ensuring conflicting scheduled tasks are automatically purged.
+- **Agent Schema Settings** — Added the `agent` configuration block to `usmt-config.json` with controls for idle thresholds and tray icon visibility.
+
+### Fixed
+
+- **Uncompressed Backup Discovery** — Fixed an issue where `Get-LastBackupTime` failed to detect uncompressed folder backups by updating the filter to match `migratron-store-*`.
+
+---
+
 ## [v1.3.0] — 2026-06-24
 
 ### Added

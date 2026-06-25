@@ -110,7 +110,25 @@
         }
       },
       "required": ["taskName", "trigger", "time"]
+    },
+    "agent": {
+      "type": "OBJECT",
+      "properties": {
+        "idleMinutesThreshold": {
+          "type": "INTEGER",
+          "description": "Number of minutes the user must be idle before the agent triggers a backup."
+        },
+        "interceptShutdown": {
+          "type": "BOOLEAN",
+          "description": "If true, the agent will attempt to pause Windows shutdown/logoff to perform a snapshot."
+        },
+        "showTrayIcon": {
+          "type": "BOOLEAN",
+          "description": "If true, displays an icon in the system tray for manual control."
+        }
+      },
+      "required": ["idleMinutesThreshold", "interceptShutdown", "showTrayIcon"]
     }
   },
-  "required": ["usmt", "backup", "schedule"]
+  "required": ["usmt", "backup", "schedule", "agent"]
 }
