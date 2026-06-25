@@ -129,7 +129,7 @@ else {
         Write-Host "  [1] Migration Operations (Backup & Restore)"
         Write-Host "  [2] Manage Backups (List & Delete)"
         Write-Host "  [3] Configuration & Automation"
-        Write-Host "  ---" -ForegroundColor DarkGray
+        Write-Host "  ---" -ForegroundColor Gray
         Write-Host "  [Q] Quit"
         Write-Host ""
         
@@ -142,7 +142,7 @@ else {
                     Write-Host "  [1] Backup Settings to ZIP Archive"
                     Write-Host "  [2] Restore Settings from ZIP Archive"
                     Write-Host "  [3] Verify Backup Archive"
-                    Write-Host "  ---" -ForegroundColor DarkGray
+                    Write-Host "  ---" -ForegroundColor Gray
                     Write-Host "  [M] Back to Main Menu"
                     Write-Host "  [Q] Quit"
                     Write-Host ""
@@ -162,7 +162,6 @@ else {
                     }
                     elseif ($opChoice -eq "2") {
                         Write-Host ""
-                        Assert-AdminPrivileges -CallerBoundParameters $PSBoundParameters
                         $path = Get-BackupSelection -ConfigPath (Join-Path $ScriptDir "usmt-config.json")
                         if ([string]::IsNullOrEmpty($path) -or -not (Test-Path $path)) {
                             if (-not [string]::IsNullOrEmpty($path)) {
@@ -221,7 +220,7 @@ else {
                     Write-Host "  [5] Discover & Add Custom AppData / Game Saves"
                     Write-Host "  [6] Manage Included Custom Paths"
                     Write-Host "  [7] Manage Excluded Custom Paths"
-                    Write-Host "  ---" -ForegroundColor DarkGray
+                    Write-Host "  ---" -ForegroundColor Gray
                     Write-Host "  [M] Back to Main Menu"
                     Write-Host "  [Q] Quit"
                     Write-Host ""
@@ -248,13 +247,12 @@ else {
                     }
                     elseif ($cfgChoice -eq "2") {
                         Write-Host ""
-                        Assert-AdminPrivileges -CallerBoundParameters $PSBoundParameters
                         Write-Host "Manage Scheduled Task:" -ForegroundColor Magenta
                         Write-Host "  [1] Register Daily Backup Task"
                         Write-Host "  [2] Register Smart Background Agent"
                         Write-Host "  [3] Remove Scheduled Task"
                         Write-Host "  [4] Back to Configuration Menu"
-                        Write-Host "  ---" -ForegroundColor DarkGray
+                        Write-Host "  ---" -ForegroundColor Gray
                         Write-Host "  [M] Back to Main Menu"
                         Write-Host "  [Q] Quit"
                         $taskChoice = Read-Host "Select an option [1-4, M, Q]"
@@ -262,7 +260,7 @@ else {
                         elseif ($taskChoice -match '^[mM]$') { continue MainMenu }
                         elseif ($taskChoice -eq "1") {
                             $timeVal = Read-Host "Enter daily backup time (e.g. 22:00)"
-                            if ([string]::IsNullOrEmpty($timeVal) -or $timeVal -notmatch '^\d{2}:\d{2}$') {
+                            if ([string]::IsNullOrEmpty($timeVal) -or $timeVal -notmatch '^([01][0-9]|2[0-3]):[0-5][0-9]$') {
                                 Log "Invalid time format. Using default 22:00." 'WARN'
                                 $timeVal = '22:00'
                             }
@@ -327,7 +325,7 @@ else {
                             }
                             
                             Write-Host "  [$backOpt] Back to Configuration Menu"
-                            Write-Host "  ---" -ForegroundColor DarkGray
+                            Write-Host "  ---" -ForegroundColor Gray
                             Write-Host "  [M] Back to Main Menu"
                             Write-Host "  [Q] Quit"
                             Write-Host ""
@@ -386,7 +384,7 @@ else {
                                         }
                                     }
                                 } else {
-                                    Write-Host "Leave any value empty to skip/clear:" -ForegroundColor DarkGray
+                                    Write-Host "Leave any value empty to skip/clear:" -ForegroundColor Gray
                                     $dVal = Read-Host "Enter Dailies count"
                                     $wVal = Read-Host "Enter Weeklies count"
                                     $mVal = Read-Host "Enter Monthlies count"
@@ -485,7 +483,7 @@ else {
                                 $newKey = Read-ConfirmedSecureString -Prompt "Enter encryption key (leave empty to cancel)"
                                 
                                 if ($null -eq $newKey) {
-                                    Write-Host "[-] Action cancelled. Encoding unchanged." -ForegroundColor DarkGray
+                                    Write-Host "[-] Action cancelled. Encoding unchanged." -ForegroundColor Gray
                                     Start-Sleep -Seconds 1
                                 } else {
                                     $localCfg.backup | Add-Member -MemberType NoteProperty -Name "encryptionKeyEncoded" -Value $newEncEncoded -Force
@@ -540,7 +538,7 @@ else {
                             Write-Host "  [2] Corporate OneDrive (`$ONEDRIVECOMMERCIAL\MigratronBackups)"
                             Write-Host "  [3] Personal OneDrive (`$ONEDRIVECONSUMER\MigratronBackups)"
                             Write-Host "  [4] Custom Local/Network Path"
-                            Write-Host "  ---" -ForegroundColor DarkGray
+                            Write-Host "  ---" -ForegroundColor Gray
                             Write-Host "  [M] Back to Configuration Menu"
                             Write-Host "  [Q] Quit"
                             Write-Host ""

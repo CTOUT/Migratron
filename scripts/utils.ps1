@@ -23,7 +23,7 @@ function Log {
         'ERROR' { 'Red' }
         'WARN' { 'Yellow' }
         'SUCCESS' { 'Green' }
-        'DEBUG' { 'DarkGray' }
+        'DEBUG' { 'Gray' }
         default { 'Cyan' }
     }
     Write-Host "[$ts] $icon $Message" -ForegroundColor $color
@@ -56,7 +56,7 @@ function Show-MenuHeader {
         $padLeftSub = [math]::Max(0, [math]::Floor((50 - $Subtitle.Length) / 2))
         $padRightSub = [math]::Max(0, 50 - $Subtitle.Length - $padLeftSub)
         $centeredSubtitle = (" " * $padLeftSub) + $Subtitle + (" " * $padRightSub)
-        Write-Host $centeredSubtitle -ForegroundColor DarkGray
+        Write-Host $centeredSubtitle -ForegroundColor Gray
     }
     
     Write-Host "==================================================" -ForegroundColor Magenta
@@ -158,8 +158,12 @@ function Convert-ToUsmtPath {
 #region Manifest/Config Management
 function Get-UsmtConfig {
     param(
-        [string]$ConfigPath = (Join-Path $PSScriptRoot "usmt-config.json")
+        [string]$ConfigPath = (Join-Path $PSScriptRoot "usmt-config.json"),
+        [switch]$Force
     )
+    if (-not $Force -and $null -ne $Global:CachedUsmtConfig) {
+        return $Global:CachedUsmtConfig
+    }
     if (-not (Test-Path $ConfigPath)) {
         throw "Configuration file not found at: $ConfigPath"
     }
@@ -208,12 +212,11 @@ function Get-UsmtConfig {
                 $json.backup.encryptionKey = ""
             }
         }
-        
+        $Global:CachedUsmtConfig = $json
         return $json
     }
     catch {
-        Log "Failed to parse JSON config: $_" 'ERROR'
-        return $null
+        throw "Failed to parse usmt-config.json: $_"
     }
 }
 
@@ -241,6 +244,9 @@ function Set-LocalConfig {
     # Use UTF8NoBOM
     $utf8NoBom = New-Object System.Text.UTF8Encoding $false
     [System.IO.File]::WriteAllText($ConfigPath, $jsonString, $utf8NoBom)
+    
+    # Invalidate cache
+    $Global:CachedUsmtConfig = $null
 }
 #endregion
 

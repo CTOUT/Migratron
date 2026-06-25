@@ -20,7 +20,7 @@ while ($true) {
     $paths = @($localCfg.backup.excludePaths)
     
     if ($paths.Count -eq 0) {
-        Write-Host "[-] No custom exclusions currently configured.`n" -ForegroundColor DarkGray
+        Write-Host "[-] No custom exclusions currently configured.`n" -ForegroundColor Gray
     } else {
         Write-Host " ID | Path" -ForegroundColor Cyan
         Write-Host "----|-------------------------------------------------"
