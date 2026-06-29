@@ -60,6 +60,7 @@ if ($idleThresholdMs -le 0) { $idleThresholdMs = 15 * 60 * 1000 } # default 15m
 
 $Global:BackupProcess = $null
 $Global:IsShuttingDown = $false
+$Global:IsManualBackup = $false
 
 # Find an icon (fallback to standard system info icon)
 $icon = [System.Drawing.SystemIcons]::Information
@@ -109,7 +110,12 @@ $contextMenu.Add_Opening({
     # Update Status
     if ($Global:BackupProcess -and -not $Global:BackupProcess.HasExited) {
         if ($Global:IsSuspended) {
-            $itemStatus.Text = "Status: Paused (User Active)"
+            $action = $config.agent.actionOnUserActivity
+            if ($action -eq "Throttle") {
+                $itemStatus.Text = "Status: Throttled (User Active)"
+            } else {
+                $itemStatus.Text = "Status: Paused (User Active)"
+            }
         } else {
             $itemStatus.Text = "Status: Running Backup..."
         }
@@ -163,6 +169,7 @@ function Run-Backup {
     $startInfo.WindowStyle = [System.Diagnostics.ProcessWindowStyle]::Hidden
     $startInfo.CreateNoWindow = $true
 
+    $Global:IsManualBackup = $Manual
     $Global:BackupProcess = [System.Diagnostics.Process]::Start($startInfo)
 }
 
@@ -178,6 +185,7 @@ $timer.Add_Tick({
     if ($Global:BackupProcess -and $Global:BackupProcess.HasExited) {
         $Global:BackupProcess = $null
         $Global:IsSuspended = $false
+        $Global:IsManualBackup = $false
         $notifyIcon.Text = "Migratron Background Agent"
     }
 
@@ -185,20 +193,46 @@ $timer.Add_Tick({
 
     # If backup is currently running, check if user returned
     if ($Global:BackupProcess) {
+        if ($Global:IsManualBackup) {
+            # Manual backup completely bypasses idle suspension
+            return
+        }
+
+        # Reload config in case it changed
+        $config = Get-UsmtConfig -Force
+        $action = $config.agent.actionOnUserActivity
+        if ($null -eq $action) { $action = "Suspend" }
+
         if ($idleTime -lt 60000 -and -not $Global:IsSuspended) {
-            # User is active, suspend the backup
-            try {
-                [Win32]::NtSuspendProcess($Global:BackupProcess.Handle)
-                $Global:IsSuspended = $true
-                $notifyIcon.Text = "Migratron Agent (Paused - User Active)"
-            } catch {}
+            # User is active
+            if ($action -eq "Suspend") {
+                try {
+                    [Win32]::NtSuspendProcess($Global:BackupProcess.Handle)
+                    $Global:IsSuspended = $true
+                    $notifyIcon.Text = "Migratron Agent (Paused - User Active)"
+                } catch {}
+            } elseif ($action -eq "Throttle") {
+                try {
+                    $Global:BackupProcess.PriorityClass = [System.Diagnostics.ProcessPriorityClass]::Idle
+                    $Global:IsSuspended = $true # Repurpose flag as IsThrottled
+                    $notifyIcon.Text = "Migratron Agent (Throttled - User Active)"
+                } catch {}
+            }
         } elseif ($idleTime -ge $idleThresholdMs -and $Global:IsSuspended) {
-            # User left again, resume the backup
-            try {
-                [Win32]::NtResumeProcess($Global:BackupProcess.Handle)
-                $Global:IsSuspended = $false
-                $notifyIcon.Text = "Migratron Agent (Running Backup...)"
-            } catch {}
+            # User left again, resume or unthrottle
+            if ($action -eq "Suspend") {
+                try {
+                    [Win32]::NtResumeProcess($Global:BackupProcess.Handle)
+                    $Global:IsSuspended = $false
+                    $notifyIcon.Text = "Migratron Agent (Running Backup...)"
+                } catch {}
+            } elseif ($action -eq "Throttle") {
+                try {
+                    $Global:BackupProcess.PriorityClass = [System.Diagnostics.ProcessPriorityClass]::Normal
+                    $Global:IsSuspended = $false
+                    $notifyIcon.Text = "Migratron Agent (Running Backup...)"
+                } catch {}
+            }
         }
         return
     }

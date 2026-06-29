@@ -8,27 +8,38 @@
       "properties": {
         "customPath": {
           "type": "STRING",
-          "description": "Custom path to USMT amd64 folder if not standard ADK installation"
+          "description": "Custom path to USMT amd64 folder if not standard ADK installation",
+          "default": ""
         },
         "xmlFiles": {
           "type": "ARRAY",
-          "items": { "type": "STRING" },
-          "description": "USMT rule XML files to pass to ScanState/LoadState"
+          "items": {
+            "type": "STRING"
+          },
+          "description": "USMT rule XML files to pass to ScanState/LoadState",
+          "default": ["MigApp.xml", "MigUser.xml", "ExcludeCommon.xml"]
         },
         "additionalArgs": {
           "type": "ARRAY",
-          "items": { "type": "STRING" },
-          "description": "Additional flags passed to ScanState/LoadState. Common flags include /c (continue on non-fatal errors), /v:1 (error logging only, default), /v:5 (verbose status logging), /v:13 (full debug logging), and /efs:skip."
+          "items": {
+            "type": "STRING"
+          },
+          "description": "Additional flags passed to ScanState/LoadState. Common flags include /c (continue on non-fatal errors), /v:1 (error logging only, default), /v:5 (verbose status logging), /v:13 (full debug logging), and /efs:skip.",
+          "default": ["/c", "/v:1", "/efs:skip"]
         },
         "userScope": {
           "type": "STRING",
           "enum": ["current", "all"],
-          "description": "Controls which user profiles ScanState captures. 'current' (default) captures only the user running the backup; 'all' captures every profile on the machine. Ignored when 'users' is non-empty."
+          "description": "Controls which user profiles ScanState captures. 'current' (default) captures only the user running the backup; 'all' captures every profile on the machine. Ignored when 'users' is non-empty.",
+          "default": "current"
         },
         "users": {
           "type": "ARRAY",
-          "items": { "type": "STRING" },
-          "description": "Optional list of specific usernames to capture (e.g. 'Alice' or 'DOMAIN\\Alice'). When non-empty, takes precedence over userScope. Each entry becomes a /ui: argument; all other users are excluded via /ue:*\\*."
+          "items": {
+            "type": "STRING"
+          },
+          "description": "Optional list of specific usernames to capture (e.g. 'Alice' or 'DOMAIN\\Alice'). When non-empty, takes precedence over userScope. Each entry becomes a /ui: argument; all other users are excluded via /ue:*\\*.",
+          "default": []
         }
       },
       "required": ["customPath", "xmlFiles", "additionalArgs"]
@@ -38,34 +49,50 @@
       "properties": {
         "outputDir": {
           "type": "STRING",
-          "description": "Target folder for backup archives (supports environment variables)"
+          "description": "Target folder for backup archives (supports environment variables)",
+          "default": "$ONEDRIVE\\MigratronBackups"
         },
         "retentionMode": {
           "type": "STRING",
           "enum": ["simple", "gfs"],
-          "description": "Determines the retention strategy. 'simple' keeps the newest N backups. 'gfs' enables Grandfather-Father-Son rotation."
+          "description": "Determines the retention strategy. 'simple' keeps the newest N backups. 'gfs' enables Grandfather-Father-Son rotation.",
+          "default": "simple"
         },
         "retentionCount": {
           "type": "INTEGER",
-          "description": "Number of backup zip files to keep when retentionMode is 'simple'."
+          "description": "Number of backup zip files to keep when retentionMode is 'simple'.",
+          "default": 5
         },
         "gfsRetention": {
           "type": "OBJECT",
           "description": "Grandfather-Father-Son limits when retentionMode is 'gfs'.",
           "properties": {
-            "dailies": { "type": "INTEGER" },
-            "weeklies": { "type": "INTEGER" },
-            "monthlies": { "type": "INTEGER" }
+            "dailies": {
+              "type": "INTEGER"
+            },
+            "weeklies": {
+              "type": "INTEGER"
+            },
+            "monthlies": {
+              "type": "INTEGER"
+            }
           },
-          "required": ["dailies", "weeklies", "monthlies"]
+          "required": ["dailies", "weeklies", "monthlies"],
+          "default": {
+            "dailies": 7,
+            "monthlies": 12,
+            "weeklies": 4
+          }
         },
         "compress": {
           "type": "BOOLEAN",
-          "description": "Compress backup store into ZIP archive"
+          "description": "Compress backup store into ZIP archive",
+          "default": false
         },
         "encrypt": {
           "type": "BOOLEAN",
-          "description": "Enable USMT AES-256 encryption for backup archives"
+          "description": "Enable USMT AES-256 encryption for backup archives",
+          "default": false
         },
         "encryptionKey": {
           "type": "STRING",
@@ -73,21 +100,39 @@
         },
         "generateManifest": {
           "type": "BOOLEAN",
-          "description": "If true, USMT will automatically generate a plain-text manifest file containing a list of all gathered files."
+          "description": "If true, USMT will automatically generate a plain-text manifest file containing a list of all gathered files.",
+          "default": true
         },
         "excludePaths": {
           "type": "ARRAY",
-          "items": { "type": "STRING" },
-          "description": "User-specific directories or drives to exclude recursively"
+          "items": {
+            "type": "STRING"
+          },
+          "description": "User-specific directories or drives to exclude recursively",
+          "default": [
+            "%OneDrive%",
+            "%OneDriveConsumer%",
+            "%OneDriveCommercial%",
+            "%USERPROFILE%\\Dropbox",
+            "%LOCALAPPDATA%\\Google\\DriveFS",
+            "%LOCALAPPDATA%\\Box",
+            "%USERPROFILE%\\Box",
+            "%USERPROFILE%\\Box Sync",
+            "%windir%\\ServiceProfiles"
+          ]
         },
         "includePaths": {
           "type": "ARRAY",
-          "items": { "type": "STRING" },
-          "description": "List of paths to explicitly include in the backup, overriding default USMT omissions. Environment variables are supported."
+          "items": {
+            "type": "STRING"
+          },
+          "description": "List of paths to explicitly include in the backup, overriding default USMT omissions. Environment variables are supported.",
+          "default": ["%USERPROFILE%\\AppData\\LocalLow"]
         },
         "waitForSync": {
           "type": "BOOLEAN",
-          "description": "If true, the backup script will pause at the very end until OneDrive has fully uploaded the archive to the cloud."
+          "description": "If true, the backup script will pause at the very end until OneDrive has fully uploaded the archive to the cloud.",
+          "default": true
         }
       },
       "required": ["outputDir", "retentionCount", "compress", "encrypt"]
@@ -97,16 +142,19 @@
       "properties": {
         "taskName": {
           "type": "STRING",
-          "description": "Name of the Windows Scheduled Task"
+          "description": "Name of the Windows Scheduled Task",
+          "default": "MigratronSnapshot"
         },
         "trigger": {
           "type": "STRING",
           "enum": ["Daily", "AtLogon", "OnIdle"],
-          "description": "Task scheduler trigger"
+          "description": "Task scheduler trigger",
+          "default": "Daily"
         },
         "time": {
           "type": "STRING",
-          "description": "Trigger time for Daily task (HH:mm format)"
+          "description": "Trigger time for Daily task (HH:mm format)",
+          "default": "22:00"
         }
       },
       "required": ["taskName", "trigger", "time"]
@@ -116,18 +164,32 @@
       "properties": {
         "idleMinutesThreshold": {
           "type": "INTEGER",
-          "description": "Number of minutes the user must be idle before the agent triggers a backup."
+          "description": "Number of minutes the user must be idle before the agent triggers a backup.",
+          "default": 15
         },
         "interceptShutdown": {
           "type": "BOOLEAN",
-          "description": "If true, the agent will attempt to pause Windows shutdown/logoff to perform a snapshot."
+          "description": "If true, the agent will attempt to pause Windows shutdown/logoff to perform a snapshot.",
+          "default": true
         },
         "showTrayIcon": {
           "type": "BOOLEAN",
-          "description": "If true, displays an icon in the system tray for manual control."
+          "description": "If true, displays an icon in the system tray for manual control.",
+          "default": true
+        },
+        "actionOnUserActivity": {
+          "type": "STRING",
+          "enum": ["Suspend", "Throttle", "Ignore"],
+          "description": "Determines how the agent handles backups when the user returns to the PC. 'Suspend' freezes the process completely. 'Throttle' lowers CPU priority to Idle. 'Ignore' leaves it running.",
+          "default": "Throttle"
         }
       },
-      "required": ["idleMinutesThreshold", "interceptShutdown", "showTrayIcon"]
+      "required": [
+        "idleMinutesThreshold",
+        "interceptShutdown",
+        "showTrayIcon",
+        "actionOnUserActivity"
+      ]
     }
   },
   "required": ["usmt", "backup", "schedule", "agent"]

@@ -11,6 +11,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [v1.5.0] — 2026-06-29
+
+---
+
+## [v1.5.0] — 2026-06-29
+
+### Added
+
+- **Smart Agent Manual Bypass** — Clicking "Backup Now" from the system tray agent now bypasses all idle-time suspension logic, forcing the backup to run immediately at normal priority.
+- **Smart Agent Throttling Mode** — Added a new schema configuration `agent.actionOnUserActivity` with options `Suspend`, `Throttle`, and `Ignore`. The default is now `Throttle`, which lowers the backup CPU priority to `Idle` when the user returns to the PC, allowing backups to slowly trickle through to completion instead of freezing entirely and starving.
+
+### Changed
+
+- **Schema Enhancements** — Iterated over all configuration sections in `usmt-config-schema.json` to formally declare the `default` attribute for every single property, matching the shipping `usmt-config.json`. This ensures IDE tooltips properly display default values for properties like `excludePaths` and `gfsRetention`.
+
+---
+
 ## [v1.4.1] — 2026-06-25
 
 ### Added

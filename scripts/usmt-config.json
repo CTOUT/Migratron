@@ -1,6 +1,7 @@
 {
   "$schema": "../schemas/usmt-config-schema.json",
   "agent": {
+    "actionOnUserActivity": "Throttle",
     "idleMinutesThreshold": 15,
     "interceptShutdown": true,
     "showTrayIcon": true
