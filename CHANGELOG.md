@@ -11,7 +11,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [v1.5.0] — 2026-06-29
+## [v1.6.0] — 2026-06-30
+
+### Added
+
+- **Native Auto-Updater** — Migratron now includes `scripts/update-migratron.ps1` to natively query GitHub for updates and safely pull them via Git.
+- **Smart Agent Auto-Updating** — The Smart Background Agent now features a "Check for Updates" context menu item. Additionally, a new configuration property `agent.autoUpdate` (default: true) instructs the agent to silently check for and pull updates once every 24 hours while idle, and automatically restart itself if new code is detected.
+- **Version Display** — The system tray agent now natively parses `migratron.ps1` to display the active Migratron version directly inside its context menu.
 
 ---
 

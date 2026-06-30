@@ -61,6 +61,7 @@ if ($idleThresholdMs -le 0) { $idleThresholdMs = 15 * 60 * 1000 } # default 15m
 $Global:BackupProcess = $null
 $Global:IsShuttingDown = $false
 $Global:IsManualBackup = $false
+$Global:LastUpdateCheck = (Get-Date)
 
 # Find an icon (fallback to standard system info icon)
 $icon = [System.Drawing.SystemIcons]::Information
@@ -85,6 +86,20 @@ $notifyIcon.Visible = $config.agent.showTrayIcon
 
 $contextMenu = New-Object System.Windows.Forms.ContextMenuStrip
 
+$mainScriptPath = Join-Path $PSScriptRoot "..\migratron.ps1"
+$appVersion = "Unknown"
+if (Test-Path $mainScriptPath) {
+    $migText = Get-Content $mainScriptPath -Raw
+    if ($migText -match '(?m)^\s*Version:\s*(\d+\.\d+\.\d+)$') {
+        $appVersion = "v" + $matches[1]
+    }
+}
+
+$itemVersion = $contextMenu.Items.Add("Migratron $appVersion")
+$itemVersion.Enabled = $false
+
+$contextMenu.Items.Add("-") # Separator
+
 $itemStatus = $contextMenu.Items.Add("Status: Idle")
 $itemStatus.Enabled = $false
 
@@ -96,6 +111,13 @@ $contextMenu.Items.Add("-") # Separator
 $itemBackup = $contextMenu.Items.Add("Backup Now")
 $itemBackup.Add_Click({
     Run-Backup -Manual $true
+})
+
+$contextMenu.Items.Add("-") # Separator
+
+$itemUpdate = $contextMenu.Items.Add("Check for Updates")
+$itemUpdate.Add_Click({
+    Run-UpdateCheck -Manual $true
 })
 
 $contextMenu.Items.Add("-") # Separator
@@ -144,6 +166,30 @@ function Get-LastBackupTime {
     $latest = Get-ChildItem -Path $outDir -Filter "migratron-store-*" | Sort-Object CreationTime -Descending | Select-Object -First 1
     if ($latest) { return $latest.CreationTime }
     return [DateTime]::MinValue
+}
+
+function Run-UpdateCheck {
+    param([bool]$Manual = $false)
+
+    if ($Manual) { $notifyIcon.ShowBalloonTip(3000, "Migratron Updater", "Checking GitHub for updates...", [System.Windows.Forms.ToolTipIcon]::Info) }
+
+    $updaterScript = Join-Path $PSScriptRoot "update-migratron.ps1"
+    $psExe = if ($PSVersionTable.PSVersion.Major -ge 7) { 'pwsh.exe' } else { 'powershell.exe' }
+    
+    $proc = Start-Process $psExe -ArgumentList "-WindowStyle Hidden -NoProfile -ExecutionPolicy RemoteSigned -File `"$updaterScript`"" -PassThru -Wait -WindowStyle Hidden
+    
+    if ($proc.ExitCode -eq 1) {
+        $notifyIcon.ShowBalloonTip(5000, "Migratron Updated!", "Successfully pulled the latest updates from GitHub. Restarting agent...", [System.Windows.Forms.ToolTipIcon]::Info)
+        Start-Sleep -Seconds 2
+        # Restart agent to pick up new code
+        Start-Process $psExe -ArgumentList "-WindowStyle Hidden -NoProfile -ExecutionPolicy RemoteSigned -File `"$PSCommandPath`"" -WindowStyle Hidden
+        $notifyIcon.Visible = $false
+        $form.Close()
+    } elseif ($proc.ExitCode -eq 0) {
+        if ($Manual) { $notifyIcon.ShowBalloonTip(3000, "Migratron Updater", "Migratron is already up to date.", [System.Windows.Forms.ToolTipIcon]::Info) }
+    } else {
+        if ($Manual) { $notifyIcon.ShowBalloonTip(3000, "Migratron Updater", "Failed to update. You may have local uncommitted changes.", [System.Windows.Forms.ToolTipIcon]::Error) }
+    }
 }
 
 function Run-Backup {
@@ -245,6 +291,12 @@ $timer.Add_Tick({
             # It's a new day, and user is idle.
             Run-Backup
         }
+    }
+
+    # Daily Background Update Check
+    if ($config.agent.autoUpdate -and ((Get-Date) -gt $Global:LastUpdateCheck.AddHours(24))) {
+        $Global:LastUpdateCheck = (Get-Date)
+        Run-UpdateCheck -Manual $false
     }
 })
 
