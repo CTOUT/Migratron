@@ -35,8 +35,8 @@ if (Test-Path $migratronPath) {
     $mig = Get-Content $migratronPath -Raw
     $vClean = $Version.Substring(1) # remove 'v' for the script header
     
-    if ($mig -match '(?m)^\s*Version:\s*\d+\.\d+\.\d+$') {
-        $mig = $mig -replace '(?m)^(\s*Version:\s*)\d+\.\d+\.\d+$', "`${1}$vClean"
+    if ($mig -match '(?m)^\s*Version:\s*\d+\.\d+\.\d+\s*$') {
+        $mig = $mig -replace '(?m)^(\s*Version:\s*)\d+\.\d+\.\d+(\s*)$', "`${1}$vClean`${2}"
         $utf8NoBom = New-Object System.Text.UTF8Encoding $false
         [System.IO.File]::WriteAllText($migratronPath, $mig, $utf8NoBom)
         Write-Host "Updated version in migratron.ps1 to $vClean" -ForegroundColor Green

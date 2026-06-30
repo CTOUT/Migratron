@@ -180,15 +180,21 @@
         "actionOnUserActivity": {
           "type": "STRING",
           "enum": ["Suspend", "Throttle", "Ignore"],
-          "description": "Determines how the agent handles backups when the user returns to the PC. 'Suspend' freezes the process completely. 'Throttle' lowers CPU priority to Idle. 'Ignore' leaves it running.",
-          "default": "Throttle"
+          "default": "Throttle",
+          "description": "Determines how the agent handles backups when the user returns to the PC. 'Suspend' freezes the process completely. 'Throttle' lowers CPU priority to Idle. 'Ignore' leaves it running."
+        },
+        "autoUpdate": {
+          "type": "BOOLEAN",
+          "default": true,
+          "description": "If true, the agent will silently check for and pull new Migratron updates from GitHub once every 24 hours."
         }
       },
       "required": [
         "idleMinutesThreshold",
         "interceptShutdown",
         "showTrayIcon",
-        "actionOnUserActivity"
+        "actionOnUserActivity",
+        "autoUpdate"
       ]
     }
   },
