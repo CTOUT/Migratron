@@ -1,56 +1,48 @@
 {
-  "$schema": "../schemas/usmt-config-schema.json",
-  "usmt": {
-    "customPath": "",
+    "$schema": "../schemas/usmt-config-schema.json",
+    "usmt": {
+        "customPath": "",
 
-    "userScope": "current",
-    // "userScope": "all",
+        "userScope": "current",
+        // "userScope": "all",
 
-    "users": [],
-    // "users": ["Chris"],
-    // "users": ["DOMAIN\\Alice", "DOMAIN\\Bob"],
+        "users": [],
+        // "users": ["Chris"],
+        // "users": ["DOMAIN\\Alice", "DOMAIN\\Bob"],
 
-    "xmlFiles": [
-      "MigApp.xml",
-      "MigUser.xml",
-      "ExcludeCommon.xml"
-    ],
-    "additionalArgs": [
-      "/c",
-      "/v:1",
-      "/efs:skip"
-    ]
-  },
-  "backup": {
-    "outputDir": "$ONEDRIVE\\MigratronBackups",
-    "retentionMode": "simple",
-    "retentionCount": 5,
-    "gfsRetention": {
-      "dailies": 7,
-      "weeklies": 4,
-      "monthlies": 12
+        "xmlFiles": ["MigApp.xml", "MigUser.xml", "ExcludeCommon.xml"],
+        "additionalArgs": ["/c", "/v:1", "/efs:skip"]
     },
-    "compress": false,
-    "encryptionKey": "",
-    "generateManifest": true,
-    "excludePaths": [
-      "%OneDrive%",
-      "%OneDriveConsumer%",
-      "%OneDriveCommercial%",
-      "%USERPROFILE%\\Dropbox",
-      "%LOCALAPPDATA%\\Google\\DriveFS",
-      "%LOCALAPPDATA%\\Box",
-      "%USERPROFILE%\\Box",
-      "%USERPROFILE%\\Box Sync",
-      "%windir%\\ServiceProfiles",
-      "D:\\",
-      "E:\\UnwantedFolder"
-    ],
-    "waitForSync": true
-  },
-  "schedule": {
-    "taskName": "MigratronSnapshot",
-    "trigger": "Daily",
-    "time": "22:00"
-  }
+    "backup": {
+        "outputDir": "$ONEDRIVE\\MigratronBackups",
+        "retentionMode": "simple",
+        "retentionCount": 5,
+        "gfsRetention": {
+            "dailies": 7,
+            "weeklies": 4,
+            "monthlies": 12
+        },
+        "compress": false,
+        "encryptionKey": "",
+        "generateManifest": true,
+        "excludePaths": [
+            "%OneDrive%",
+            "%OneDriveConsumer%",
+            "%OneDriveCommercial%",
+            "%USERPROFILE%\\Dropbox",
+            "%LOCALAPPDATA%\\Google\\DriveFS",
+            "%LOCALAPPDATA%\\Box",
+            "%USERPROFILE%\\Box",
+            "%USERPROFILE%\\Box Sync",
+            "%windir%\\ServiceProfiles",
+            "D:\\",
+            "E:\\UnwantedFolder"
+        ],
+        "waitForSync": true
+    },
+    "schedule": {
+        "taskName": "MigratronSnapshot",
+        "trigger": "Daily",
+        "time": "22:00"
+    }
 }
