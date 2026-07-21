@@ -1,16 +1,11 @@
-# Handle line endings
-* text=auto
+# Auto detect text files and perform LF normalization
+* text=auto eol=lf
 
-# Force PowerShell scripts to use CRLF on checkout, as is standard on Windows
-*.ps1 text eol=crlf
-*.psm1 text eol=crlf
-*.psd1 text eol=crlf
-
-# Common configurations
-*.json text eol=lf
-*.md text eol=lf
-*.yml text eol=lf
-*.yaml text eol=lf
-*.cff text eol=lf
-.gitignore text eol=lf
-.gitattributes text eol=lf
+# Binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.zip binary
+*.tar.gz binary
